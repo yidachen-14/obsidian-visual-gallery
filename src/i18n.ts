@@ -1,9 +1,10 @@
-import type { GallerySort } from "./browser/VaultBrowser";
+import type { GalleryFilter, GallerySort } from "./browser/VaultBrowser";
 import { validLanguage, type UiLanguage } from "./languages";
 import { EXTRA_TRANSLATIONS } from "./i18n-extra";
 export { LANGUAGE_OPTIONS, UI_LANGUAGES, validLanguage, type UiLanguage } from "./languages";
 
 const EN = {
+  newCanvas: "New Canvas", untitledCanvas: "Untitled Canvas", showInGallery: "Show in Visual Gallery",
   sectionInterface: "Interface",
   sectionLayout: "Card layout",
   sectionBrowsing: "Browsing defaults",
@@ -95,6 +96,7 @@ const EN = {
 export type TranslationKey = keyof typeof EN;
 
 const ZH: Record<TranslationKey, string> = {
+  newCanvas: "新增畫布", untitledCanvas: "未命名畫布", showInGallery: "在視覺圖庫中顯示",
   sectionInterface: "介面", sectionLayout: "卡片版面", sectionBrowsing: "瀏覽預設", sectionIcons: "圖示", sectionCache: "縮圖快取",
   iconOriginal: "原版資料夾圖示", iconFolder: "資料夾", iconFolders: "多個資料夾", iconArchive: "封存盒", iconBox: "盒子", iconLibrary: "書庫", iconBook: "書本", iconHeart: "愛心資料夾", iconCog: "齒輪資料夾", iconTree: "資料夾樹", iconGrid: "網格", iconGallery: "圖庫", iconImages: "圖片", iconFilm: "底片", iconClapperboard: "場記板", iconPalette: "調色盤", iconHome: "首頁",
   viewTitle: "視覺圖庫",
@@ -176,6 +178,7 @@ const ZH: Record<TranslationKey, string> = {
 };
 
 const ZH_CN: Record<TranslationKey, string> = {
+  newCanvas: "新增画布", untitledCanvas: "未命名画布", showInGallery: "在视觉图库中显示",
   sectionInterface: "界面", sectionLayout: "卡片布局", sectionBrowsing: "浏览默认值", sectionIcons: "图标", sectionCache: "缩略图缓存",
   iconOriginal: "原版文件夹图标", iconFolder: "文件夹", iconFolders: "多个文件夹", iconArchive: "归档盒", iconBox: "盒子", iconLibrary: "书库", iconBook: "书本", iconHeart: "爱心文件夹", iconCog: "齿轮文件夹", iconTree: "文件夹树", iconGrid: "网格", iconGallery: "图库", iconImages: "图片", iconFilm: "胶片", iconClapperboard: "场记板", iconPalette: "调色盘", iconHome: "首页",
   viewTitle: "视觉图库", gallery: "视觉图库",
@@ -217,6 +220,7 @@ const ZH_CN: Record<TranslationKey, string> = {
 };
 
 const JA: Record<TranslationKey, string> = {
+  newCanvas: "新規キャンバス", untitledCanvas: "無題のキャンバス", showInGallery: "ビジュアルギャラリーで表示",
   sectionInterface: "インターフェース", sectionLayout: "カードのレイアウト", sectionBrowsing: "閲覧の既定値", sectionIcons: "アイコン", sectionCache: "サムネイルキャッシュ",
   iconOriginal: "従来のフォルダーアイコン", iconFolder: "フォルダー", iconFolders: "複数のフォルダー", iconArchive: "アーカイブ", iconBox: "ボックス", iconLibrary: "ライブラリ", iconBook: "本", iconHeart: "お気に入りフォルダー", iconCog: "設定フォルダー", iconTree: "フォルダーツリー", iconGrid: "グリッド", iconGallery: "ギャラリー", iconImages: "画像", iconFilm: "フィルム", iconClapperboard: "カチンコ", iconPalette: "パレット", iconHome: "ホーム",
   viewTitle: "ビジュアルギャラリー", gallery: "ビジュアルギャラリー",
@@ -286,4 +290,11 @@ export function sortLabel(language: UiLanguage, sort: GallerySort): string {
     "modified-asc": "sortModifiedAsc", created: "sortCreatedDesc", "created-asc": "sortCreatedAsc",
   };
   return translate(language, keys[sort]);
+}
+
+export function filterLabel(language: UiLanguage, filter: GalleryFilter): string {
+  const keys: Record<GalleryFilter, TranslationKey> = {
+    all: "filterAll", canvas: "filterCanvas", notes: "filterNotes", images: "filterImages", pdf: "filterPdf",
+  };
+  return translate(language, keys[filter]);
 }

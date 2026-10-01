@@ -7,7 +7,7 @@ function fixture() {
   const root = new TFolder(""), folder = new TFolder("Projects", root), file = new TFile("Projects/測試.md", 0, folder);
   const items = new Map<string, TAbstractFile>([["Projects", folder], [file.path, file]]);
   const promptForDeletion = vi.fn().mockResolvedValue(true);
-  const create = vi.fn(async (path: string) => {
+  const create = vi.fn(async (path: string, _content: string) => {
     if (items.has(path)) throw Error("Collision");
     const item = new TFile(path, 0, folder); items.set(path, item); return item;
   });
@@ -27,8 +27,11 @@ describe("gallery item actions", () => {
     expect(newItemDestination(folder, " 新筆記 ", "note")).toBe("Projects/新筆記.md");
     expect(newItemDestination(root, "Note.MD", "note")).toBe("Note.MD");
     expect(newItemDestination(folder, "新資料夾", "folder")).toBe("Projects/新資料夾");
+    expect(newItemDestination(folder, " 新畫布 ", "canvas")).toBe("Projects/新畫布.canvas");
+    expect(newItemDestination(root, "Board.CANVAS", "canvas")).toBe("Board.CANVAS");
     for (const name of ["", ".", "..", "../escape", "a/b", "bad\\name", "bad:", "bad.", "a\u0000b"]) {
       expect(newItemDestination(folder, name, "note")).toBeNull();
+      expect(newItemDestination(folder, name, "canvas")).toBeNull();
     }
   });
 
@@ -71,6 +74,17 @@ describe("gallery item actions", () => {
     expect(canRevealItem(app)).toBe(true);
     revealGalleryItem(app, file, shell);
     expect(shell.showItemInFolder).toHaveBeenCalledExactlyOnceWith("/Vault with spaces/Projects/測試.md");
+  });
+
+  it("creates valid empty JSON Canvas and never overwrites an existing board", async () => {
+    const { app, folder, create, createFolder } = fixture();
+    expect((await createGalleryItem(app, folder, "Board", "canvas")).path).toBe("Projects/Board.canvas");
+    expect(JSON.parse(create.mock.calls[0]![1])).toEqual({ nodes: [], edges: [] });
+    expect(createFolder).not.toHaveBeenCalled();
+    await expect(createGalleryItem(app, folder, "Board.canvas", "canvas")).rejects.toThrow();
+    expect(create).toHaveBeenCalledOnce();
+    create.mockRejectedValueOnce(Error("Denied"));
+    await expect(createGalleryItem(app, folder, "Other", "canvas")).rejects.toThrow("Denied");
   });
 
   it("refuses non-local adapters and stale reveal references", () => {

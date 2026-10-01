@@ -1,8 +1,8 @@
 import { describe, expect, it, vi } from "vitest";
 import { Menu as StubMenu, MenuItem } from "./obsidian-stub";
-import { cardMenu, creationMenu, sortMenu } from "../src/gallery/Menus";
-import { GALLERY_SORTS } from "../src/browser/VaultBrowser";
-import { UI_LANGUAGES, sortLabel, translate } from "../src/i18n";
+import { cardMenu, creationMenu, filterMenu, sortMenu } from "../src/gallery/Menus";
+import { GALLERY_FILTERS, GALLERY_SORTS } from "../src/browser/VaultBrowser";
+import { UI_LANGUAGES, filterLabel, sortLabel, translate } from "../src/i18n";
 
 describe("native gallery menus", () => {
   it.each(UI_LANGUAGES)("has six grouped sort options and one checkmark in %s", language => {
@@ -27,14 +27,37 @@ describe("native gallery menus", () => {
     expect(rename).toHaveBeenCalledOnce(); expect(remove).toHaveBeenCalledOnce(); expect(reveal).toHaveBeenCalledOnce();
   });
 
-  it("exposes both background creation actions and disables unsupported reveal", () => {
+  it.each(UI_LANGUAGES)("orders note, Canvas and folder creation in %s", language => {
     const create = vi.fn();
-    const menu = creationMenu("ja", create) as unknown as StubMenu;
-    expect(menu.items.map(item => item?.title)).toEqual([translate("ja", "newNote"), translate("ja", "newFolder")]);
+    const menu = creationMenu(language, create) as unknown as StubMenu;
+    expect(menu.items.map(item => item?.title)).toEqual([translate(language, "newNote"), translate(language, "newCanvas"), translate(language, "newFolder")]);
+    expect(menu.items.map(item => item?.icon)).toEqual(["file-plus", "layout-dashboard", "folder-plus"]);
     menu.items.forEach(item => item?.callback());
-    expect(create.mock.calls.map(call => call[0])).toEqual(["note", "folder"]);
+    expect(create.mock.calls.map(call => call[0])).toEqual(["note", "canvas", "folder"]);
+  });
+  it("disables unsupported reveal", () => {
     const nonLocal = cardMenu("en", false, false, () => {}, () => {}, () => {}) as unknown as StubMenu;
     expect(nonLocal.items[1]?.disabled).toBe(true);
+  });
+  it.each(UI_LANGUAGES)("has all five text filters with one checkmark in %s", language => {
+    for (const current of GALLERY_FILTERS) {
+      const choose = vi.fn();
+      const menu = filterMenu(language, current, choose) as unknown as StubMenu;
+      expect(menu.items.map(item => item?.title)).toEqual(GALLERY_FILTERS.map(value => filterLabel(language, value)));
+      expect(menu.items.filter(item => item?.checked)).toHaveLength(1);
+      expect(menu.items[GALLERY_FILTERS.indexOf(current)]?.checked).toBe(true);
+      expect(choose).not.toHaveBeenCalled();
+      menu.items.forEach(item => item?.callback());
+      expect(choose.mock.calls.map(call => call[0])).toEqual(GALLERY_FILTERS);
+    }
+  });
+  it.each(["note", "canvas", "folder"] as const)("shared plus menu waits before creating the selected %s", kind => {
+    const create = vi.fn();
+    const menu = creationMenu("zh-TW", create) as unknown as StubMenu;
+    expect(menu.items).toHaveLength(3);
+    expect(create).not.toHaveBeenCalled();
+    menu.items[["note", "canvas", "folder"].indexOf(kind)]?.callback();
+    expect(create).toHaveBeenCalledExactlyOnceWith(kind);
   });
   it.each(UI_LANGUAGES)("omits rename entirely for a multi-selection in %s", language => {
     const remove = vi.fn(), reveal = vi.fn();

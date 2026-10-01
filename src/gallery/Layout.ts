@@ -12,13 +12,21 @@ export function galleryHeaderWidth(available: number, rowWidth: number, titleWid
   return Math.min(Math.max(0, available), Math.max(rowWidth, Math.min(titleWidth, 320) + controlsWidth + gap));
 }
 
-function textWidth(element: HTMLElement | null): number {
+/** Keep all actual buttons visible before truncating the folder title. */
+export function galleryToolbarSizing(available: number, count = 3): { buttonSize: number; gap: number; width: number } {
+  if (count <= 0) return { buttonSize: 28, gap: 4, width: 0 };
+  const gap = available >= 42 + count * 28 + (count - 1) * 4 ? 4 : 2;
+  const buttonSize = Math.floor(Math.min(28, Math.max(18, (available - 42 - (count - 1) * gap) / count)) * 64) / 64;
+  return { buttonSize, gap, width: count * buttonSize + (count - 1) * gap };
+}
+
+function textWidth(element: HTMLElement | null, text = element?.textContent ?? ""): number {
   if (!element) return 0;
   const context = element.ownerDocument.createElement("canvas").getContext("2d");
   if (!context) return element.scrollWidth;
   const style = getComputedStyle(element);
   context.font = style.font;
-  return context.measureText(element.textContent ?? "").width;
+  return context.measureText(text).width + Math.max(0, text.length - 1) * (parseFloat(style.letterSpacing) || 0);
 }
 
 export function syncGalleryLayout(shell: HTMLElement, layout: HTMLElement, grid: HTMLElement, count: number, cardWidth: number): void {
@@ -28,19 +36,15 @@ export function syncGalleryLayout(shell: HTMLElement, layout: HTMLElement, grid:
   const gap = parseFloat(getComputedStyle(grid).columnGap) || 0;
   const result = galleryRowLayout(available, cardWidth, gap, count, shell.ownerDocument.defaultView!.matchMedia("(max-width: 720px)").matches);
   const header = layout.querySelector<HTMLElement>(".visual-gallery-header");
-  const filter = layout.querySelector<HTMLElement>(".visual-gallery-select");
-  const sort = layout.querySelector<HTMLElement>(".visual-gallery-sort");
   const controls = layout.querySelector<HTMLElement>(".visual-gallery-controls");
-  const filterStyle = filter ? getComputedStyle(filter) : null;
-  const sortStyle = sort ? getComputedStyle(sort) : null;
-  // Measure untruncated text, not the controls' previously constrained boxes.
-  // Otherwise resize/locale changes can oscillate between wrapped layouts.
-  const filterWidth = textWidth(filter?.querySelector<HTMLOptionElement>("option:checked") ?? null)
-    + (parseFloat(filterStyle?.paddingLeft ?? "0") || 0) + (parseFloat(filterStyle?.paddingRight ?? "0") || 0);
-  const sortWidth = textWidth(sort?.querySelector<HTMLElement>(".visual-gallery-sort-label") ?? null)
-    + (parseFloat(sortStyle?.paddingLeft ?? "0") || 0) + (parseFloat(sortStyle?.paddingRight ?? "0") || 0) + 22;
+  const toolbar = galleryToolbarSizing(available, controls?.querySelectorAll(".visual-gallery-toolbar-button").length ?? 0);
+  layout.style.setProperty("--vg-toolbar-button-size", toolbar.buttonSize + "px");
+  layout.style.setProperty("--vg-toolbar-gap", toolbar.gap + "px");
+  if (controls) controls.style.width = toolbar.width + "px";
+  const headerGap = header ? parseFloat(getComputedStyle(header).columnGap) || 0 : 0;
+  controls?.classList.toggle("is-overflowing", toolbar.width > Math.max(0, available - 26 - headerGap));
   const headerWidth = galleryHeaderWidth(available, result.width, textWidth(layout.querySelector("h2")),
-    filterWidth + sortWidth + (controls ? parseFloat(getComputedStyle(controls).gap) || 0 : 0), header ? parseFloat(getComputedStyle(header).columnGap) || 0 : 0);
+    toolbar.width, headerGap);
   const width = headerWidth + "px";
   if (layout.style.width !== width) layout.style.width = width;
   grid.style.width = result.width + "px";

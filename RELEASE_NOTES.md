@@ -1,4 +1,105 @@
-# Visual Gallery 0.1.14
+# Visual Gallery 0.1.18
+
+- Route folder cards and breadcrumbs through the existing leaf's public
+  setViewState before changing the folder. Mark ViewStateResult.history for
+  actual folder changes so Obsidian's native Back/Forward arrows record pages.
+- Enable native view navigation. Mouse side buttons and configured host
+  navigation shortcuts share Obsidian's history; no duplicate input handlers
+  or parallel plugin history stack are added. A note opened in the same pane
+  can return to its gallery page.
+- Retain each visited page's filter/sort. Ignore duplicate/stale destinations;
+  missing or deleted folder states recover to the root. Clear stale card
+  selection when the folder actually changes. Card DOM/CSS, gradients, toolbar
+  layout, outlines and drag behavior are unchanged.
+
+Verified locally: production build and 266 tests in 20 suites. Nine tests
+exercise the actual GalleryView with stub host base classes: state signaling,
+back/forward, breadcrumbs, branching, duplicate/stale targets, page settings,
+external reveal, deleted folders and selection cleanup. Installed Obsidian
+1.13.7 source confirms native arrows and mouse buttons 3/4 route through its
+history. This is source/unit evidence, not native mouse E2E. The disposable
+installation received 0.1.18 runtime files, preserving data.json; native UI
+testing stopped on user activity in the formal vault. No formal-vault runtime
+or notes were modified. Physical side-button behavior and full native history
+acceptance remain unverified; a guarded disposable-vault check is provided.
+Local update package only; no external publication performed.
+
+# Visual Gallery 0.1.17
+
+- Merge New note, New Canvas and New folder into one **+** button. Its native
+  text menu contains exactly those three actions in that order; choosing an
+  action opens the existing naming dialog. Opening the menu creates nothing.
+- Header order is now **Create (+), Sort, Filter** beside the folder title.
+  Preserve translated tooltips, keyboard operation, sort/filter options and
+  current checkmarks. Size the toolbar from its three actual buttons.
+- Card DOM/CSS, outside strokes, gradients, selection, drag rules and existing
+  creation validation are unchanged. Retain historical five-button QA separately.
+
+Verified locally: 256 tests in 19 suites and production build. Installed
+Obsidian 1.13.7 CSS/icon assets pass 864 layout, 216 sparse-header, 1,080
+localized toolbar-state and 384 responsive cases, plus eight circular swatches.
+All three browser pointer callbacks and keyboard opening of Create dispatch
+correctly. Menu tests verify the three choices and deferred creation in all
+18 interface languages. This is automated/host-style browser evidence, not
+native Obsidian application E2E. No formal-vault installation or external
+publication was performed. Local update package only.
+
+# Visual Gallery 0.1.16
+
+- Replace the header's text filter/sort controls with exactly five icon-only
+  native-style buttons: **New note, New Canvas, New folder, Sort, Filter**.
+  Keep the folder title visible; no persistent action labels or chevrons.
+- Every button opens a native text menu. Creation choices use the existing
+  naming dialog; sort/filter menus retain their full translated labels and
+  mark the current choice. Tooltips and accessible names include current state.
+- Keep title and all five buttons on one row, including the real narrow-window
+  media breakpoint. Compress the button group only in narrow panes; preserve
+  occupied-column alignment and the grid's exact width. Active filters tint
+  their single icon. Card surfaces, strokes, gradients and drag rules are unchanged.
+- Share production toolbar DOM with host-style QA and update development
+  constraints to reflect this explicitly requested toolbar redesign.
+
+Verified locally: 256 tests in 19 suites and production build. Actual installed
+Obsidian 1.13.7 CSS/icon assets pass 864 layout cases, 216 sparse-header cases,
+1,080 localized toolbar-state cases, eight circular swatches, 648 card-outline
+cases with hover/focus checks, and 384 responsive
+cases at viewport widths 360/720/900/1220 and 100%/125%/150% zoom. All five real
+browser pointer actions and ArrowDown dispatch correctly. These host-style
+browser fixtures are not Obsidian application E2E. Native UI testing was stopped
+when the user was actively using the formal vault; no native mouse-menu or
+personal-vault installation is claimed. Local update package only, not a
+published GitHub/Obsidian release.
+
+## 0.1.15
+
+- Fix cropped active filter text in sparse galleries. Reserve its current
+  label and decorative chevrons; only the sort label shrinks. Keep the title
+  and both controls on one row and preserve exact occupied grid widths.
+- Add **New Canvas** between **New note** and **New folder** in the blank-space
+  menu. Write valid empty JSON Canvas through Obsidian's vault API and open it
+  directly. Invalid names, stale folders and collisions cannot overwrite files.
+- Add **Show in Visual Gallery** to the native file explorer's folder and
+  supported-file menus. Folders open their contents; files reveal, select and
+  scroll to their original card in the parent gallery, including later render
+  chunks. Reuse the gallery tab and reset only its transient file-type filter.
+- Translate all new menu and dialog labels in the existing 18 languages.
+- Lock the no-shrink filter and native explorer-menu contracts in regression
+  tests. Do not change card geometry, cover colors, icons or drag behavior.
+
+Verified locally: 217 tests in 18 suites and production build. Installed-host
+CSS checks pass 864 layout cases, 216 sparse-header cases, 2,694 filter-text
+cases, eight native circular color swatches and 648 card-outline cases plus
+hover/focus checks. The old 0.1.14 CSS fails the new text-cropping assertion.
+The disposable native Obsidian 1.13.7 run passes 180 filter checks, 36 localized
+explorer callback checks, file reveal, folder navigation and gallery-leaf reuse.
+These callback checks are synthetic host integration, not OS-pointer E2E;
+the original menu harness emitted unrelated core-plugin builder errors and was
+corrected afterward. Full native mouse-menu/create-Canvas verification remains
+uncompleted because the user resumed using the personal vault. User preferences
+were restored and formal-vault files were not modified. This is a local 0.1.15
+update package, not a published GitHub/Obsidian release.
+
+## 0.1.14
 
 - Keep the folder title, filter and sort on one header row, including empty,
   one-card and two-card galleries. Expand only the header when needed; retain

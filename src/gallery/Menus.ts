@@ -1,6 +1,6 @@
 import { Menu } from "obsidian";
-import { GALLERY_SORTS, type GallerySort } from "../browser/VaultBrowser";
-import { sortLabel, translate, type UiLanguage } from "../i18n";
+import { GALLERY_FILTERS, GALLERY_SORTS, type GalleryFilter, type GallerySort } from "../browser/VaultBrowser";
+import { filterLabel, sortLabel, translate, type UiLanguage } from "../i18n";
 import type { NewItemKind } from "./ItemActions";
 
 export function sortMenu(language: UiLanguage, current: GallerySort, choose: (sort: GallerySort) => void): Menu {
@@ -9,6 +9,14 @@ export function sortMenu(language: UiLanguage, current: GallerySort, choose: (so
     if (index === 2 || index === 4) menu.addSeparator();
     menu.addItem(item => item.setTitle(sortLabel(language, value)).setChecked(value === current).onClick(() => choose(value)));
   });
+  return menu;
+}
+
+export function filterMenu(language: UiLanguage, current: GalleryFilter, choose: (filter: GalleryFilter) => void): Menu {
+  const menu = new Menu();
+  for (const value of GALLERY_FILTERS) {
+    menu.addItem(item => item.setTitle(filterLabel(language, value)).setChecked(value === current).onClick(() => choose(value)));
+  }
   return menu;
 }
 
@@ -26,6 +34,7 @@ export function cardMenu(language: UiLanguage, finder: boolean, revealEnabled: b
 export function creationMenu(language: UiLanguage, create: (kind: NewItemKind) => void): Menu {
   const menu = new Menu();
   menu.addItem(item => item.setTitle(translate(language, "newNote")).setIcon("file-plus").onClick(() => create("note")));
+  menu.addItem(item => item.setTitle(translate(language, "newCanvas")).setIcon("layout-dashboard").onClick(() => create("canvas")));
   menu.addItem(item => item.setTitle(translate(language, "newFolder")).setIcon("folder-plus").onClick(() => create("folder")));
   return menu;
 }

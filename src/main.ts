@@ -2,6 +2,7 @@ import { Notice, Plugin, TAbstractFile, TFile, normalizePath, setIcon, setToolti
 import { ThumbnailCache } from "./cache/ThumbnailCache";
 import { CanvasRenderer } from "./canvas/CanvasRenderer";
 import { GALLERY_VIEW_TYPE, GalleryView } from "./gallery/GalleryView";
+import { explorerGalleryTarget } from "./gallery/ExplorerNavigation";
 import { translate, type TranslationKey } from "./i18n";
 import {
   DEFAULT_SETTINGS,
@@ -56,6 +57,11 @@ export default class VisualGalleryPlugin extends Plugin {
       id: "open-gallery",
       callback: () => void this.openGallery(),
     });
+    this.registerEvent(this.app.workspace.on("file-menu", (menu, item, source) => {
+      if (source !== "file-explorer-context-menu" || !explorerGalleryTarget(this.app, item)) return;
+      menu.addItem(entry => entry.setTitle(this.t("showInGallery")).setIcon(this.gallerySettings.navigationIcon)
+        .onClick(() => void this.openGallery(item)));
+    }));
 
     this.addLocalizedCommand("commandRebuild", {
       id: "rebuild-all-canvas-thumbnails",
@@ -130,17 +136,20 @@ export default class VisualGalleryPlugin extends Plugin {
     }
   }
 
-  private async openGallery(): Promise<void> {
+  private async openGallery(item?: TAbstractFile): Promise<void> {
+    const target = item ? explorerGalleryTarget(this.app, item) : null;
+    if (item && !target) return;
     const activeFile = this.app.workspace.getActiveFile();
-    const folderPath = activeFile?.parent?.path ?? "";
+    const folderPath = target?.folderPath ?? activeFile?.parent?.path ?? "";
     const existing = this.app.workspace.getLeavesOfType(GALLERY_VIEW_TYPE)[0];
     const leaf = existing ?? this.app.workspace.getLeaf("tab");
     await leaf.setViewState({
       type: GALLERY_VIEW_TYPE,
       active: true,
-      state: { folderPath },
+      state: { folderPath, ...(target ? { filter: "all" } : {}) },
     });
     await this.app.workspace.revealLeaf(leaf);
+    if (target?.revealPath && leaf.view instanceof GalleryView) leaf.view.revealItem(target.revealPath);
   }
 
   private scheduleInvalidation(file: TAbstractFile): void {

@@ -1,6 +1,7 @@
 import { TFile, TFolder, type TAbstractFile } from "obsidian";
 
 export type GalleryFilter = "all" | "canvas" | "notes" | "images" | "pdf";
+export const GALLERY_FILTERS: GalleryFilter[] = ["all", "canvas", "notes", "images", "pdf"];
 export const GALLERY_SORTS = ["name", "name-desc", "modified", "modified-asc", "created", "created-asc"] as const;
 export type GallerySort = typeof GALLERY_SORTS[number];
 

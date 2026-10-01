@@ -10,7 +10,8 @@ Browse your Obsidian vault as a visual card gallery, with thumbnails of the **wh
 - Folder cards, breadcrumbs, file-type filters and Obsidian-style sorting by name, modification time or creation time in either direction.
 - Single-click to select; double-click to open. Command/Ctrl-click toggles individual cards, Shift-click selects a range, and dragging blank space selects a rectangle. Escape or a blank-space click clears selection.
 - Drag files and folders to gallery folders, breadcrumbs or the native file explorer. Dragging an unselected card works immediately; dragging a selected card moves the selection.
-- Right-click a card to rename it, delete it or reveal its original file in Finder/system file manager. Right-click blank space to create a note or folder.
+- Right-click a card to rename it, delete it or reveal its original file in Finder/system file manager. Right-click blank space to create a note, Canvas or folder, in that order.
+- Right-click a folder or supported file in the native file explorer and choose **Show in Visual Gallery**. Folders open their contents; files open their parent gallery and become selected, even if the previous gallery filter hid them.
 - 18 interface languages: English, Simplified Chinese, Traditional Chinese, Japanese, Korean, German, Spanish, French, Italian, Brazilian Portuguese, Russian, Ukrainian, Dutch, Polish, Turkish, Indonesian, Vietnamese and Thai. New installations default to English; upgrading preserves your choice.
 - Adjustable card width, gallery heading, independent folder/note light/dark cover gradients, folder icons and ribbon icons.
 - Local thumbnail caching, lazy generation, progressive rendering and automatic removal of stale or orphaned previews.
@@ -43,9 +44,19 @@ Settings are grouped into Interface, Card layout, Browsing defaults, Icons,
 Folder cover colors, Note card cover colors and Thumbnail cache. Changing the
 interface language updates the gallery, settings, command names and ribbon
 tooltip immediately; it never renames your files or replaces your custom title.
-Both filter and sort controls have theme-independent up/down chevrons.
-The folder title and both controls stay on one row even with very few cards;
-only the header expands when needed, without changing card or grid widths.
+The header keeps the folder title alongside three icon-only buttons, in order:
+**Create (+), Sort, Filter**. Clicking **+** opens a native menu ordered
+**New note, New Canvas, New folder**; choosing an action then opens the existing
+naming dialog. Sort and Filter open their respective native text menus. Hover
+tooltips and accessible labels are translated and show the current sort/filter.
+Sort and Filter menus mark the active choice; an active filter tints its icon.
+The title and buttons stay on one row, including narrow windows and very few
+cards. Only the header expands when needed, without changing card/grid widths.
+Folder cards and breadcrumbs use Obsidian's native navigation history. The
+pane's Back/Forward arrows, mouse side buttons and configured native navigation
+shortcuts share that history, including returning from a note opened in the
+same pane. Each visited gallery page retains its filter and sort. A new folder
+destination after going back clears the old forward branch.
 
 ## Privacy and storage
 

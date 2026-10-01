@@ -1,12 +1,13 @@
 import { FileSystemAdapter, TFolder, normalizePath, type App, type TAbstractFile } from "obsidian";
 import { isValidItemName } from "./Rename";
 
-export type NewItemKind = "note" | "folder";
+export type NewItemKind = "note" | "canvas" | "folder";
 
 export function newItemDestination(folder: TFolder, name: string, kind: NewItemKind): string | null {
   name = name.trim();
   if (!isValidItemName(name)) return null;
-  const filename = kind === "note" && !name.toLowerCase().endsWith(".md") ? `${name}.md` : name;
+  const extension = kind === "note" ? ".md" : kind === "canvas" ? ".canvas" : "";
+  const filename = extension && !name.toLowerCase().endsWith(extension) ? `${name}${extension}` : name;
   return normalizePath(`${folder.isRoot() ? "" : folder.path}/${filename}`);
 }
 
@@ -30,7 +31,8 @@ export async function createGalleryItem(app: App, folder: TFolder, name: string,
   const destination = newItemDestination(folder, name, kind);
   if (!destination || app.vault.getAbstractFileByPath(destination)) throw new Error("Invalid or duplicate name");
   // Vault.create/createFolder also reject collisions at write time; never overwrite.
-  return kind === "note" ? app.vault.create(destination, "") : app.vault.createFolder(destination);
+  if (kind === "folder") return app.vault.createFolder(destination);
+  return app.vault.create(destination, kind === "canvas" ? JSON.stringify({ nodes: [], edges: [] }) + "\n" : "");
 }
 
 export interface RevealShell { showItemInFolder(path: string): void; }

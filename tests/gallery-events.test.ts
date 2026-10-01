@@ -12,35 +12,51 @@ describe("native gallery event contracts", () => {
     expect(handler).not.toContain("stopPropagation");
     expect(handler).not.toContain("stopImmediatePropagation");
   });
-  it("keeps the compact filter chevrons as a decorative non-intercepting icon", () => {
-    expect(source).toContain('setIcon(filterIcon, "chevrons-up-down")');
-    expect(source).toContain('"aria-hidden": "true"');
-    const icon = css.match(/\.visual-gallery-filter-icon \{([\s\S]*?)\}/)?.[1];
-    expect(icon).toContain("pointer-events: none");
-    expect(icon).toContain("right: 8px");
+  // Explicit 2026-10-01 request replaces the old text/chevron controls with
+  // icon-only buttons, with creation merged into one plus menu by request.
+  // Card geometry assertions remain unchanged.
+  it("uses the shared creation toolbar instead of text dropdowns", () => {
+    expect(source).toContain("renderGalleryToolbar(header, language, this.filter, this.sort");
+    expect(source).not.toContain("visual-gallery-select");
+    expect(source).not.toContain("visual-gallery-sort-label");
+    expect(source).toContain("filterMenu(language, this.filter");
+    expect(source).toContain("creationMenu(language, kind => this.createItem(kind))");
+    expect(source).not.toContain("[action]");
   });
-  it("does not depend on theme background images or restore an oversized filter", () => {
-    const select = css.match(/\.visual-gallery-view select\.visual-gallery-select \{([\s\S]*?)\}/)?.[1];
-    expect(select).toContain("background-image: none");
-    expect(select).toContain("field-sizing: content");
-    expect(select).toContain("min-width: 0");
-    expect(select).toContain("padding-right: 28px");
-  });
-  it("keeps the sort arrow outside the ellipsized label in every language", () => {
-    expect(source).toContain('setIcon(sortIcon, "chevrons-up-down")');
-    expect(source).toContain('cls: "visual-gallery-sort-label"');
-    expect(source).toContain('cls: "visual-gallery-sort-icon", attr: { "aria-hidden": "true" }');
-    const icon = css.match(/\.visual-gallery-sort-icon \{([\s\S]*?)\}/)?.[1];
-    expect(icon).toContain("pointer-events: none");
-    expect(icon).toContain("flex: 0 0 14px");
-    const label = css.match(/\.visual-gallery-sort-label \{([\s\S]*?)\}/)?.[1];
-    expect(label).toContain("min-width: 0");
-    expect(label).toContain("text-overflow: ellipsis");
+  it("keeps decorative toolbar SVGs non-intercepting and independent of backgrounds", () => {
+    const toolbar = readFileSync(new URL("../src/gallery/Toolbar.ts", import.meta.url), "utf8");
+    expect(toolbar).toContain('setIcon(button, definition.icon)');
+    expect(toolbar).toContain('setAttribute("aria-hidden", "true")');
+    expect(toolbar).toContain('setAttribute("aria-haspopup", "menu")');
+    expect(css.match(/\.visual-gallery-toolbar-button svg \{([\s\S]*?)\}/)?.[1]).toContain("pointer-events: none");
+    expect(css).not.toContain("visual-gallery-filter-icon");
   });
   it("never wraps sparse-gallery controls below the folder title", () => {
     for (const selector of ["visual-gallery-header", "visual-gallery-controls"]) {
       expect(css.match(new RegExp(`\\.${selector} \\{([\\s\\S]*?)\\}`))?.[1]).toContain("flex-wrap: nowrap");
     }
     expect(css.match(/\.visual-gallery-title-area h2 \{([\s\S]*?)\}/)?.[1]).toContain("text-overflow: ellipsis");
+    for (const rule of css.matchAll(/\.visual-gallery-header\s*\{([^}]*)\}/g)) {
+      expect(rule[1]).not.toContain("flex-direction: column");
+    }
+  });
+  it("registers the native explorer context menu and opens the clicked item", () => {
+    const main = readFileSync(new URL("../src/main.ts", import.meta.url), "utf8");
+    expect(main).toContain('this.registerEvent(this.app.workspace.on("file-menu"');
+    expect(main).toContain('source !== "file-explorer-context-menu"');
+    expect(main).toContain('this.openGallery(item)');
+    expect(main).toContain('target ? { filter: "all" }');
+    expect(main).toContain('leaf.view.revealItem(target.revealPath)');
+    expect(source).toContain('this.scrollToRevealedItem();');
+    expect(source).toContain('card.focus({ preventScroll: true })');
+  });
+  it("uses native history instead of intercepting the host's mouse side buttons", () => {
+    expect(source).toContain("this.navigation = true");
+    expect(source).toContain("result.history = true");
+    const navigate = source.match(/private async navigateTo[\s\S]*?\n  \}/)?.[0];
+    expect(navigate).toContain("await this.leaf.setViewState");
+    expect(navigate).not.toContain("this.folderPath =");
+    expect(source).not.toMatch(/addEventListener\(["'](?:mousedown|mouseup|auxclick)["']/);
+    expect(source).not.toMatch(/window\.history\.(back|forward|go)\(/);
   });
 });

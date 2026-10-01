@@ -1,23 +1,25 @@
-import { ItemView, Notice, Platform, TAbstractFile, TFile, TFolder, setIcon, type ViewStateResult, type WorkspaceLeaf } from "obsidian";
+import { ItemView, Notice, Platform, TAbstractFile, TFile, TFolder, type ViewStateResult, type WorkspaceLeaf } from "obsidian";
 import { renderGalleryIcon } from "./Icons";
 import { draggedItems, planCardMoves, startCardDrag } from "./CardDrag";
 import { CardSelection } from "./Selection";
 import { RenameModal } from "./RenameModal";
 import { MarqueeSelection } from "./MarqueeSelection";
 import { CreateItemModal } from "./CreateItemModal";
-import { canRevealItem, deleteGalleryItem, revealGalleryItem } from "./ItemActions";
-import { cardMenu, creationMenu, sortMenu } from "./Menus";
+import { canRevealItem, deleteGalleryItem, revealGalleryItem, type NewItemKind } from "./ItemActions";
+import { cardMenu, creationMenu, filterMenu, sortMenu } from "./Menus";
+import { renderGalleryToolbar } from "./Toolbar";
 import { syncGalleryLayout } from "./Layout";
 import { COVER_COLOR_KEYS } from "../SettingsModel";
 import {
   getBreadcrumbFolders,
+  GALLERY_FILTERS,
   listGalleryEntries,
   validSort,
   type GalleryEntry,
   type GalleryFilter,
   type GallerySort,
 } from "../browser/VaultBrowser";
-import { sortLabel, translate, type UiLanguage } from "../i18n";
+import { translate, type UiLanguage } from "../i18n";
 import type { VisualGallerySettings } from "../settings";
 import type { ThumbnailService } from "../thumbnails/ThumbnailService";
 
@@ -29,8 +31,6 @@ interface GalleryViewState extends Record<string, unknown> {
   sort?: GallerySort;
 }
 
-const GALLERY_FILTERS: GalleryFilter[] = ["all", "canvas", "notes", "images", "pdf"];
-
 export class GalleryView extends ItemView {
   private folderPath = "";
   private filter: GalleryFilter;
@@ -41,6 +41,7 @@ export class GalleryView extends ItemView {
   private layoutObserver: ResizeObserver | null = null;
   private readonly selection = new CardSelection();
   private order: string[] = [];
+  private pendingRevealPath: string | null = null;
   private dragging = false;
   private moving = false;
   private marquee: MarqueeSelection | null = null;
@@ -51,6 +52,7 @@ export class GalleryView extends ItemView {
     private readonly getSettings: () => VisualGallerySettings,
   ) {
     super(leaf);
+    this.navigation = true;
     const settings = this.getSettings();
     this.filter = settings.defaultFilter;
     this.sort = settings.defaultSort;
@@ -73,11 +75,21 @@ export class GalleryView extends ItemView {
   }
 
   async setState(state: unknown, result: ViewStateResult): Promise<void> {
+    const previousFolder = this.folderPath;
+    this.pendingRevealPath = null;
     await super.setState(state, result);
     if (isGalleryViewState(state)) {
       if (typeof state.folderPath === "string") this.folderPath = state.folderPath;
       if (state.filter && GALLERY_FILTERS.includes(state.filter)) this.filter = state.filter;
       if (state.sort) this.sort = validSort(state.sort, this.sort);
+    }
+    // The public history flag lets the leaf update its native arrows/side keys.
+    // Obsidian suppresses recording when restoring a back/forward (popstate).
+    this.folderPath = this.resolveFolder().path;
+    if (this.folderPath !== previousFolder) {
+      result.history = true;
+      this.selection.clear();
+      this.contentEl.scrollTop = 0;
     }
     if (this.contentEl.isConnected) this.render();
   }
@@ -97,13 +109,8 @@ export class GalleryView extends ItemView {
       event.preventDefault();
       this.marquee?.cancel();
       this.selectCard(null);
-      const folder = this.resolveFolder();
       const language = this.getSettings().language;
-      creationMenu(language, kind => new CreateItemModal(this.app, folder, kind, language, item => {
-        if (this.folderPath === folder.path) { this.render(); this.selectCard(item.path); }
-        else this.scheduleRefresh();
-        if (item instanceof TFile) void this.app.workspace.getLeaf("tab").openFile(item);
-      }).open()).showAtMouseEvent(event);
+      creationMenu(language, kind => this.createItem(kind)).showAtMouseEvent(event);
     });
     this.registerEvent(this.app.vault.on("create", () => this.scheduleRefresh()));
     this.registerEvent(this.app.vault.on("delete", () => this.scheduleRefresh()));
@@ -113,6 +120,7 @@ export class GalleryView extends ItemView {
   }
 
   protected async onClose(): Promise<void> {
+    this.pendingRevealPath = null;
     this.marquee?.dispose();
     this.marquee = null;
     this.renderVersion += 1;
@@ -125,6 +133,24 @@ export class GalleryView extends ItemView {
 
   refreshFromSettings(): void {
     this.render();
+  }
+
+  /** The requested card may not exist yet in a later progressive-render chunk. */
+  revealItem(path: string): void {
+    if (!this.order.includes(path)) return;
+    this.selectCard(path);
+    this.pendingRevealPath = path;
+    this.scrollToRevealedItem();
+  }
+
+  private scrollToRevealedItem(): void {
+    if (!this.pendingRevealPath) return;
+    const card = Array.from(this.contentEl.querySelectorAll<HTMLElement>(".visual-gallery-card"))
+      .find(element => element.dataset.itemPath === this.pendingRevealPath);
+    if (!card) return;
+    this.pendingRevealPath = null;
+    card.scrollIntoView({ block: "nearest" });
+    card.focus({ preventScroll: true });
   }
 
   private render(): void {
@@ -163,6 +189,7 @@ export class GalleryView extends ItemView {
     this.layoutObserver = new ResizeObserver(syncLayout);
     this.layoutObserver.observe(shell);
     this.order = entries.map(entry => entry.item.path);
+    if (this.pendingRevealPath && !this.order.includes(this.pendingRevealPath)) this.pendingRevealPath = null;
     this.selection.retain(this.order);
     if (entries.length === 0) {
       grid.createDiv({ cls: "visual-gallery-empty", text: translate(language, "noMatches") });
@@ -184,34 +211,24 @@ export class GalleryView extends ItemView {
   }
 
   private renderControls(header: HTMLElement, language: UiLanguage): void {
-    const controls = header.createDiv({ cls: "visual-gallery-controls" });
-    const filterControl = controls.createDiv({ cls: "visual-gallery-filter" });
-    const filter = filterControl.createEl("select", { cls: "dropdown visual-gallery-select" });
-    filter.setAttr("aria-label", translate(language, "filterAria"));
-    for (const value of GALLERY_FILTERS) {
-      const option = filter.createEl("option", { text: filterLabel(language, value) });
-      option.value = value;
-      option.selected = value === this.filter;
-    }
-    // A real icon is independent of themes' dropdown background images/blends.
-    const filterIcon = filterControl.createSpan({ cls: "visual-gallery-filter-icon", attr: { "aria-hidden": "true" } });
-    setIcon(filterIcon, "chevrons-up-down");
-    filter.addEventListener("change", () => {
-      this.filter = filter.value as GalleryFilter;
-      this.render();
+    renderGalleryToolbar(header, language, this.filter, this.sort, (action, button) => {
+      const menu = action === "sort"
+        ? sortMenu(language, this.sort, value => { this.sort = value; this.render(); })
+        : action === "filter"
+          ? filterMenu(language, this.filter, value => { this.filter = value; this.render(); })
+          : creationMenu(language, kind => this.createItem(kind));
+      const bounds = button.getBoundingClientRect();
+      menu.setParentElement(button).showAtPosition({ x: bounds.left, y: bounds.bottom }, button.ownerDocument);
     });
+  }
 
-    const sort = controls.createEl("button", { cls: "visual-gallery-sort", attr: { type: "button", "aria-haspopup": "menu" } });
-    sort.createSpan({ cls: "visual-gallery-sort-label", text: sortLabel(language, this.sort) });
-    const sortIcon = sort.createSpan({ cls: "visual-gallery-sort-icon", attr: { "aria-hidden": "true" } });
-    setIcon(sortIcon, "chevrons-up-down");
-    sort.setAttr("aria-label", translate(language, "sortAria"));
-    sort.setAttr("title", sortLabel(language, this.sort));
-    sort.addEventListener("click", () => {
-      const bounds = sort.getBoundingClientRect();
-      sortMenu(language, this.sort, value => { this.sort = value; this.render(); })
-        .setParentElement(sort).showAtPosition({ x: bounds.left, y: bounds.bottom }, sort.ownerDocument);
-    });
+  private createItem(kind: NewItemKind): void {
+    const folder = this.resolveFolder();
+    new CreateItemModal(this.app, folder, kind, this.getSettings().language, item => {
+      if (this.folderPath === folder.path) { this.render(); this.selectCard(item.path); }
+      else this.scheduleRefresh();
+      if (item instanceof TFile) void this.app.workspace.getLeaf("tab").openFile(item);
+    }).open();
   }
 
   private renderBreadcrumbs(shell: HTMLElement, folder: TFolder): void {
@@ -222,7 +239,7 @@ export class GalleryView extends ItemView {
         cls: "clickable-icon visual-gallery-crumb",
         text: crumb.isRoot() ? this.app.vault.getName() : crumb.name,
       });
-      button.addEventListener("click", () => this.navigateTo(crumb));
+      button.addEventListener("click", () => void this.navigateTo(crumb));
       this.registerFolderDrop(button, crumb);
     }
   }
@@ -236,6 +253,7 @@ export class GalleryView extends ItemView {
       const card = this.createCard(grid, entry, index);
       this.observer?.observe(card);
     }
+    this.scrollToRevealedItem();
     if (end < entries.length) {
       window.setTimeout(() => this.renderChunk(entries, grid, end, version), 0);
     }
@@ -353,10 +371,15 @@ export class GalleryView extends ItemView {
     }
   }
 
-  private navigateTo(folder: TFolder): void {
-    this.selection.clear();
-    this.folderPath = folder.path;
-    this.render();
+  private async navigateTo(folder: TFolder): Promise<void> {
+    const current = folder.isRoot() ? this.app.vault.getRoot() : this.app.vault.getAbstractFileByPath(folder.path);
+    if (current !== folder || folder.path === this.folderPath) return;
+    // Do not mutate before setViewState: the host must snapshot the OLD page.
+    await this.leaf.setViewState({
+      type: GALLERY_VIEW_TYPE,
+      active: true,
+      state: { ...this.getState(), folderPath: folder.path },
+    });
   }
 
   private clearDropHighlights(): void {
@@ -419,11 +442,12 @@ export class GalleryView extends ItemView {
   }
 
   private openEntry(entry: GalleryEntry): void {
-    if (entry.item instanceof TFolder) this.navigateTo(entry.item);
+    if (entry.item instanceof TFolder) void this.navigateTo(entry.item);
     else void this.app.workspace.getLeaf(false).openFile(entry.item);
   }
 
   private selectCard(path: string | null): void {
+    this.pendingRevealPath = null;
     this.selection.clear();
     if (path) this.selection.select(path, this.order);
     this.updateSelection();
@@ -490,14 +514,6 @@ export class GalleryView extends ItemView {
 
 function isGalleryViewState(value: unknown): value is GalleryViewState {
   return typeof value === "object" && value !== null;
-}
-
-function filterLabel(language: UiLanguage, filter: GalleryFilter): string {
-  if (filter === "canvas") return translate(language, "filterCanvas");
-  if (filter === "notes") return translate(language, "filterNotes");
-  if (filter === "images") return translate(language, "filterImages");
-  if (filter === "pdf") return translate(language, "filterPdf");
-  return translate(language, "filterAll");
 }
 
 function kindLabel(language: UiLanguage, kind: GalleryEntry["kind"]): string {

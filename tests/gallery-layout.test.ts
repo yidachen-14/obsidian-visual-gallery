@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { galleryHeaderWidth, galleryRowLayout } from "../src/gallery/Layout";
+import { galleryHeaderWidth, galleryRowLayout, galleryToolbarSizing } from "../src/gallery/Layout";
 
 describe("toolbar matches occupied card columns", () => {
   it("expands only the header when too few cards cannot fit the title and controls", () => {
@@ -29,5 +29,16 @@ describe("toolbar matches occupied card columns", () => {
     expect(galleryRowLayout(640, 250, 18, 5, true)).toEqual({width: 640, fluid: true});
     expect(galleryRowLayout(1000, 250, 28, 0)).toEqual({width: 1000, fluid: false});
     expect(galleryRowLayout(0, 250, 18, 5)).toEqual({width: 0, fluid: true});
+  });
+  it("reserves three icon buttons, compresses only narrow toolbars and keeps fractional sizing", () => {
+    expect(galleryToolbarSizing(650)).toEqual({ buttonSize: 28, gap: 4, width: 92 });
+    for (const available of [100, 102, 120, 133.5, 134, 180, 250, 360, 650]) {
+      const toolbar = galleryToolbarSizing(available);
+      expect(toolbar.width).toBe(3 * toolbar.buttonSize + 2 * toolbar.gap);
+      expect(toolbar.width + 26 + 16).toBeLessThanOrEqual(available);
+      expect(toolbar.buttonSize).toBeGreaterThanOrEqual(18);
+      expect(toolbar.buttonSize).toBeLessThanOrEqual(28);
+    }
+    expect(galleryToolbarSizing(120).buttonSize).not.toBe(28);
   });
 });

@@ -7,6 +7,7 @@ import type { UiLanguage } from "./languages";
 type Dictionary = Record<TranslationKey, string>;
 
 const ID: Dictionary = {
+  newCanvas: "Kanvas baru", untitledCanvas: "Kanvas tanpa judul", showInGallery: "Tampilkan di Galeri visual",
   sectionInterface: "Antarmuka", sectionLayout: "Tata letak kartu", sectionBrowsing: "Bawaan penelusuran", sectionIcons: "Ikon", sectionCache: "Cache gambar mini",
   iconOriginal: "Ikon folder asli", iconFolder: "Folder", iconFolders: "Beberapa folder", iconArchive: "Arsip", iconBox: "Kotak", iconLibrary: "Perpustakaan", iconBook: "Buku terbuka", iconHeart: "Folder favorit", iconCog: "Pengaturan folder", iconTree: "Pohon folder", iconGrid: "Kisi", iconGallery: "Galeri", iconImages: "Gambar", iconFilm: "Film", iconClapperboard: "Papan klaket", iconPalette: "Palet", iconHome: "Beranda",
   viewTitle: "Galeri visual", gallery: "Galeri visual", rename: "Ubah nama", delete: "Hapus", deleteFailed: "Tidak dapat menghapus. Periksa izin dan coba lagi.", showInFinder: "Tampilkan di Finder", showInSystem: "Tampilkan di pengelola berkas", revealFailed: "Tidak dapat menampilkan item di pengelola berkas.", newNote: "Catatan baru", newFolder: "Folder baru", create: "Buat", createFailed: "Tidak dapat membuat item. Periksa nama, tujuan, dan izin.", untitledNote: "Tanpa judul", untitledFolder: "Folder tanpa nama", fileName: "Nama", extensionKept: "Ekstensi berkas dipertahankan secara otomatis.", invalidName: "Masukkan nama yang valid tanpa pemisah jalur atau karakter khusus.", renameFailed: "Tidak dapat mengubah nama. Periksa nama dan coba lagi.", cancel: "Batal", movedCount: "{count} item dipindahkan ke {folder}.", partialMove: "{count} dari {total} item dipindahkan. Sisanya tidak dipindahkan. Periksa tujuan dan coba lagi.",
@@ -16,6 +17,7 @@ const ID: Dictionary = {
 };
 
 const VI: Dictionary = {
+  newCanvas: "Canvas mới", untitledCanvas: "Canvas chưa đặt tên", showInGallery: "Hiển thị trong Thư viện trực quan",
   sectionInterface: "Giao diện", sectionLayout: "Bố cục thẻ", sectionBrowsing: "Mặc định duyệt", sectionIcons: "Biểu tượng", sectionCache: "Bộ nhớ đệm ảnh thu nhỏ",
   iconOriginal: "Biểu tượng thư mục gốc", iconFolder: "Thư mục", iconFolders: "Nhiều thư mục", iconArchive: "Lưu trữ", iconBox: "Hộp", iconLibrary: "Thư viện", iconBook: "Sách mở", iconHeart: "Thư mục yêu thích", iconCog: "Cài đặt thư mục", iconTree: "Cây thư mục", iconGrid: "Lưới", iconGallery: "Thư viện ảnh", iconImages: "Hình ảnh", iconFilm: "Phim", iconClapperboard: "Bảng clapper", iconPalette: "Bảng màu", iconHome: "Trang chủ",
   viewTitle: "Thư viện trực quan", gallery: "Thư viện trực quan", rename: "Đổi tên", delete: "Xóa", deleteFailed: "Không thể xóa. Kiểm tra quyền truy cập rồi thử lại.", showInFinder: "Hiển thị trong Finder", showInSystem: "Hiển thị trong trình quản lý tệp", revealFailed: "Không thể hiển thị mục này trong trình quản lý tệp.", newNote: "Ghi chú mới", newFolder: "Thư mục mới", create: "Tạo", createFailed: "Không thể tạo. Kiểm tra tên, đích đến và quyền truy cập.", untitledNote: "Không có tiêu đề", untitledFolder: "Thư mục chưa đặt tên", fileName: "Tên", extensionKept: "Phần mở rộng của tệp được tự động giữ nguyên.", invalidName: "Nhập tên hợp lệ không chứa dấu phân cách đường dẫn hoặc ký tự đặc biệt.", renameFailed: "Không thể đổi tên. Kiểm tra tên rồi thử lại.", cancel: "Hủy", movedCount: "Đã chuyển {count} mục vào {folder}.", partialMove: "Đã chuyển {count} trong {total} mục. Các mục còn lại chưa được chuyển. Kiểm tra đích đến rồi thử lại.",
@@ -25,6 +27,7 @@ const VI: Dictionary = {
 };
 
 const TH: Dictionary = {
+  newCanvas: "แคนวาสใหม่", untitledCanvas: "แคนวาสไม่มีชื่อ", showInGallery: "แสดงในแกลเลอรีภาพ",
   sectionInterface: "ส่วนติดต่อผู้ใช้", sectionLayout: "การจัดวางการ์ด", sectionBrowsing: "ค่าเริ่มต้นการเรียกดู", sectionIcons: "ไอคอน", sectionCache: "แคชภาพย่อ",
   iconOriginal: "ไอคอนโฟลเดอร์เดิม", iconFolder: "โฟลเดอร์", iconFolders: "หลายโฟลเดอร์", iconArchive: "กล่องเก็บถาวร", iconBox: "กล่อง", iconLibrary: "ห้องสมุด", iconBook: "หนังสือเปิด", iconHeart: "โฟลเดอร์โปรด", iconCog: "การตั้งค่าโฟลเดอร์", iconTree: "ผังโฟลเดอร์", iconGrid: "ตาราง", iconGallery: "แกลเลอรี", iconImages: "รูปภาพ", iconFilm: "ฟิล์ม", iconClapperboard: "กระดานชนวน", iconPalette: "จานสี", iconHome: "หน้าหลัก",
   viewTitle: "แกลเลอรีภาพ", gallery: "แกลเลอรีภาพ", rename: "เปลี่ยนชื่อ", delete: "ลบ", deleteFailed: "ลบไม่สำเร็จ โปรดตรวจสอบสิทธิ์แล้วลองอีกครั้ง", showInFinder: "แสดงใน Finder", showInSystem: "แสดงในตัวจัดการไฟล์", revealFailed: "ไม่สามารถแสดงรายการนี้ในตัวจัดการไฟล์ได้", newNote: "บันทึกใหม่", newFolder: "โฟลเดอร์ใหม่", create: "สร้าง", createFailed: "สร้างไม่สำเร็จ โปรดตรวจสอบชื่อ ปลายทาง และสิทธิ์", untitledNote: "ไม่มีชื่อ", untitledFolder: "โฟลเดอร์ไม่มีชื่อ", fileName: "ชื่อ", extensionKept: "นามสกุลไฟล์จะคงเดิมโดยอัตโนมัติ", invalidName: "โปรดระบุชื่อที่ถูกต้องโดยไม่มีตัวคั่นเส้นทางหรืออักขระพิเศษ", renameFailed: "เปลี่ยนชื่อไม่สำเร็จ โปรดตรวจสอบชื่อแล้วลองอีกครั้ง", cancel: "ยกเลิก", movedCount: "ย้าย {count} รายการไปยัง {folder} แล้ว", partialMove: "ย้ายแล้ว {count} จาก {total} รายการ รายการที่เหลือไม่ได้ถูกย้าย โปรดตรวจสอบปลายทางแล้วลองอีกครั้ง",
@@ -34,6 +37,7 @@ const TH: Dictionary = {
 };
 
 const NL: Dictionary = {
+  newCanvas: "Nieuw canvas", untitledCanvas: "Naamloos canvas", showInGallery: "Toon in Visuele galerij",
   sectionInterface: "Interface", sectionLayout: "Kaartindeling", sectionBrowsing: "Standaardweergave", sectionIcons: "Pictogrammen", sectionCache: "Miniaturencache",
   iconOriginal: "Oorspronkelijk mappictogram", iconFolder: "Map", iconFolders: "Mappen", iconArchive: "Archief", iconBox: "Doos", iconLibrary: "Bibliotheek", iconBook: "Open boek", iconHeart: "Favoriete map", iconCog: "Mapinstellingen", iconTree: "Mappenstructuur", iconGrid: "Raster", iconGallery: "Galerij", iconImages: "Afbeeldingen", iconFilm: "Film", iconClapperboard: "Filmklapper", iconPalette: "Palet", iconHome: "Startpagina",
   viewTitle: "Visuele galerij", gallery: "Visuele galerij", rename: "Naam wijzigen", delete: "Verwijderen", deleteFailed: "Verwijderen mislukt. Controleer de toegangsrechten en probeer opnieuw.", showInFinder: "Toon in Finder", showInSystem: "Toon in bestandsbeheer", revealFailed: "Dit item kon niet in bestandsbeheer worden getoond.", newNote: "Nieuwe notitie", newFolder: "Nieuwe map", create: "Aanmaken", createFailed: "Aanmaken mislukt. Controleer de naam, bestemming en toegangsrechten.", untitledNote: "Naamloos", untitledFolder: "Naamloze map", fileName: "Naam", extensionKept: "De bestandsextensie blijft automatisch behouden.", invalidName: "Voer een geldige naam in zonder padscheidingstekens of speciale tekens.", renameFailed: "Naam wijzigen mislukt. Controleer de naam en probeer opnieuw.", cancel: "Annuleren", movedCount: "{count} items verplaatst naar {folder}.", partialMove: "{count} van {total} items verplaatst. De overige zijn niet verplaatst. Controleer de bestemming en probeer opnieuw.",
@@ -43,6 +47,7 @@ const NL: Dictionary = {
 };
 
 const PL: Dictionary = {
+  newCanvas: "Nowe płótno", untitledCanvas: "Płótno bez tytułu", showInGallery: "Pokaż w Galerii wizualnej",
   sectionInterface: "Interfejs", sectionLayout: "Układ kart", sectionBrowsing: "Domyślne przeglądanie", sectionIcons: "Ikony", sectionCache: "Pamięć podręczna miniatur",
   iconOriginal: "Oryginalna ikona folderu", iconFolder: "Folder", iconFolders: "Foldery", iconArchive: "Archiwum", iconBox: "Pudełko", iconLibrary: "Biblioteka", iconBook: "Otwarta książka", iconHeart: "Ulubiony folder", iconCog: "Ustawienia folderu", iconTree: "Drzewo folderów", iconGrid: "Siatka", iconGallery: "Galeria", iconImages: "Obrazy", iconFilm: "Film", iconClapperboard: "Klaps filmowy", iconPalette: "Paleta", iconHome: "Strona główna",
   viewTitle: "Galeria wizualna", gallery: "Galeria wizualna", rename: "Zmień nazwę", delete: "Usuń", deleteFailed: "Nie można usunąć. Sprawdź uprawnienia i spróbuj ponownie.", showInFinder: "Pokaż w Finderze", showInSystem: "Pokaż w menedżerze plików", revealFailed: "Nie można pokazać elementu w menedżerze plików.", newNote: "Nowa notatka", newFolder: "Nowy folder", create: "Utwórz", createFailed: "Nie można utworzyć. Sprawdź nazwę, miejsce docelowe i uprawnienia.", untitledNote: "Bez tytułu", untitledFolder: "Folder bez nazwy", fileName: "Nazwa", extensionKept: "Rozszerzenie pliku jest zachowywane automatycznie.", invalidName: "Wpisz prawidłową nazwę bez separatorów ścieżki i znaków specjalnych.", renameFailed: "Nie można zmienić nazwy. Sprawdź nazwę i spróbuj ponownie.", cancel: "Anuluj", movedCount: "Przeniesiono {count} elementów do {folder}.", partialMove: "Przeniesiono {count} z {total} elementów. Pozostałe nie zostały przeniesione. Sprawdź miejsce docelowe i spróbuj ponownie.",
@@ -52,6 +57,7 @@ const PL: Dictionary = {
 };
 
 const TR: Dictionary = {
+  newCanvas: "Yeni tuval", untitledCanvas: "Adsız tuval", showInGallery: "Görsel galeride göster",
   sectionInterface: "Arayüz", sectionLayout: "Kart düzeni", sectionBrowsing: "Gezinme varsayılanları", sectionIcons: "Simgeler", sectionCache: "Küçük resim önbelleği",
   iconOriginal: "Özgün klasör simgesi", iconFolder: "Klasör", iconFolders: "Klasörler", iconArchive: "Arşiv", iconBox: "Kutu", iconLibrary: "Kitaplık", iconBook: "Açık kitap", iconHeart: "Favori klasör", iconCog: "Klasör ayarları", iconTree: "Klasör ağacı", iconGrid: "Izgara", iconGallery: "Galeri", iconImages: "Görseller", iconFilm: "Film", iconClapperboard: "Klaket", iconPalette: "Palet", iconHome: "Ana sayfa",
   viewTitle: "Görsel galeri", gallery: "Görsel galeri", rename: "Yeniden adlandır", delete: "Sil", deleteFailed: "Silinemedi. İzinleri kontrol edip tekrar deneyin.", showInFinder: "Finder’da göster", showInSystem: "Dosya yöneticisinde göster", revealFailed: "Bu öğe dosya yöneticisinde gösterilemedi.", newNote: "Yeni not", newFolder: "Yeni klasör", create: "Oluştur", createFailed: "Oluşturulamadı. Adı, hedefi ve izinleri kontrol edin.", untitledNote: "Adsız", untitledFolder: "Adsız klasör", fileName: "Ad", extensionKept: "Dosya uzantısı otomatik olarak korunur.", invalidName: "Yol ayırıcıları veya özel karakterler içermeyen geçerli bir ad girin.", renameFailed: "Yeniden adlandırılamadı. Adı kontrol edip tekrar deneyin.", cancel: "İptal", movedCount: "{count} öğe {folder} klasörüne taşındı.", partialMove: "{total} öğeden {count} tanesi taşındı. Kalanlar taşınmadı. Hedefi kontrol edip tekrar deneyin.",
@@ -61,6 +67,7 @@ const TR: Dictionary = {
 };
 
 const PT_BR: Dictionary = {
+  newCanvas: "Novo Canvas", untitledCanvas: "Canvas sem título", showInGallery: "Mostrar na Galeria visual",
   sectionInterface: "Interface", sectionLayout: "Layout dos cartões", sectionBrowsing: "Padrões de navegação", sectionIcons: "Ícones", sectionCache: "Cache de miniaturas",
   iconOriginal: "Ícone de pasta original", iconFolder: "Pasta", iconFolders: "Pastas", iconArchive: "Arquivo", iconBox: "Caixa", iconLibrary: "Biblioteca", iconBook: "Livro aberto", iconHeart: "Pasta favorita", iconCog: "Configurações de pasta", iconTree: "Árvore de pastas", iconGrid: "Grade", iconGallery: "Galeria", iconImages: "Imagens", iconFilm: "Filme", iconClapperboard: "Claquete", iconPalette: "Paleta", iconHome: "Início",
   viewTitle: "Galeria visual", gallery: "Galeria visual", rename: "Renomear", delete: "Excluir", deleteFailed: "Não foi possível excluir. Verifique as permissões e tente novamente.", showInFinder: "Mostrar no Finder", showInSystem: "Mostrar no gerenciador de arquivos", revealFailed: "Não foi possível mostrar este item no gerenciador de arquivos.", newNote: "Nova nota", newFolder: "Nova pasta", create: "Criar", createFailed: "Não foi possível criar. Verifique o nome, o destino e as permissões.", untitledNote: "Sem título", untitledFolder: "Pasta sem título", fileName: "Nome", extensionKept: "A extensão do arquivo é mantida automaticamente.", invalidName: "Digite um nome válido sem separadores de caminho ou caracteres especiais.", renameFailed: "Não foi possível renomear. Verifique o nome e tente novamente.", cancel: "Cancelar",
@@ -70,6 +77,7 @@ const PT_BR: Dictionary = {
 };
 
 const KO: Dictionary = {
+  newCanvas: "새 캔버스", untitledCanvas: "제목 없는 캔버스", showInGallery: "비주얼 갤러리에서 보기",
   sectionInterface: "인터페이스", sectionLayout: "카드 레이아웃", sectionBrowsing: "탐색 기본값", sectionIcons: "아이콘", sectionCache: "썸네일 캐시",
   iconOriginal: "기존 폴더 아이콘", iconFolder: "폴더", iconFolders: "여러 폴더", iconArchive: "보관함", iconBox: "상자", iconLibrary: "라이브러리", iconBook: "펼친 책", iconHeart: "즐겨찾는 폴더", iconCog: "폴더 설정", iconTree: "폴더 트리", iconGrid: "격자", iconGallery: "갤러리", iconImages: "이미지", iconFilm: "필름", iconClapperboard: "클래퍼보드", iconPalette: "팔레트", iconHome: "홈",
   viewTitle: "비주얼 갤러리", gallery: "비주얼 갤러리", rename: "이름 변경", delete: "삭제", deleteFailed: "삭제하지 못했습니다. 권한을 확인하고 다시 시도하세요.", showInFinder: "Finder에서 보기", showInSystem: "파일 관리자에서 보기", revealFailed: "파일 관리자에서 이 항목을 표시하지 못했습니다.", newNote: "새 노트", newFolder: "새 폴더", create: "만들기", createFailed: "만들지 못했습니다. 이름, 대상 위치와 권한을 확인하세요.", untitledNote: "제목 없음", untitledFolder: "이름 없는 폴더", fileName: "이름", extensionKept: "파일 확장자는 자동으로 유지됩니다.", invalidName: "경로 구분자나 특수 문자가 없는 유효한 이름을 입력하세요.", renameFailed: "이름을 변경하지 못했습니다. 이름을 확인하고 다시 시도하세요.", cancel: "취소", movedCount: "{count}개 항목을 {folder}(으)로 이동했습니다.", partialMove: "{total}개 중 {count}개를 이동했습니다. 나머지는 이동하지 않았습니다. 대상 위치를 확인하고 다시 시도하세요.",
@@ -79,6 +87,7 @@ const KO: Dictionary = {
 };
 
 const RU: Dictionary = {
+  newCanvas: "Новый холст", untitledCanvas: "Холст без названия", showInGallery: "Показать в Визуальной галерее",
   sectionInterface: "Интерфейс", sectionLayout: "Макет карточек", sectionBrowsing: "Настройки просмотра", sectionIcons: "Значки", sectionCache: "Кэш миниатюр",
   iconOriginal: "Исходный значок папки", iconFolder: "Папка", iconFolders: "Папки", iconArchive: "Архив", iconBox: "Коробка", iconLibrary: "Библиотека", iconBook: "Открытая книга", iconHeart: "Избранная папка", iconCog: "Настройки папки", iconTree: "Дерево папок", iconGrid: "Сетка", iconGallery: "Галерея", iconImages: "Изображения", iconFilm: "Плёнка", iconClapperboard: "Хлопушка", iconPalette: "Палитра", iconHome: "Главная",
   viewTitle: "Визуальная галерея", gallery: "Визуальная галерея", rename: "Переименовать", delete: "Удалить", deleteFailed: "Не удалось удалить. Проверьте права доступа и повторите попытку.", showInFinder: "Показать в Finder", showInSystem: "Показать в файловом менеджере", revealFailed: "Не удалось показать элемент в файловом менеджере.", newNote: "Новая заметка", newFolder: "Новая папка", create: "Создать", createFailed: "Не удалось создать. Проверьте имя, место назначения и права доступа.", untitledNote: "Без названия", untitledFolder: "Папка без названия", fileName: "Имя", extensionKept: "Расширение файла сохраняется автоматически.", invalidName: "Введите допустимое имя без разделителей пути и специальных символов.", renameFailed: "Не удалось переименовать. Проверьте имя и повторите попытку.", cancel: "Отмена", movedCount: "Перемещено {count} элементов в {folder}.", partialMove: "Перемещено {count} из {total} элементов. Остальные не перемещены. Проверьте место назначения и повторите попытку.",
@@ -88,6 +97,7 @@ const RU: Dictionary = {
 };
 
 const UK: Dictionary = {
+  newCanvas: "Нове полотно", untitledCanvas: "Полотно без назви", showInGallery: "Показати у Візуальній галереї",
   sectionInterface: "Інтерфейс", sectionLayout: "Макет карток", sectionBrowsing: "Типові параметри перегляду", sectionIcons: "Піктограми", sectionCache: "Кеш мініатюр",
   iconOriginal: "Початкова піктограма теки", iconFolder: "Тека", iconFolders: "Теки", iconArchive: "Архів", iconBox: "Коробка", iconLibrary: "Бібліотека", iconBook: "Відкрита книга", iconHeart: "Улюблена тека", iconCog: "Налаштування теки", iconTree: "Дерево тек", iconGrid: "Сітка", iconGallery: "Галерея", iconImages: "Зображення", iconFilm: "Плівка", iconClapperboard: "Кінохлопавка", iconPalette: "Палітра", iconHome: "Головна",
   viewTitle: "Візуальна галерея", gallery: "Візуальна галерея", rename: "Перейменувати", delete: "Видалити", deleteFailed: "Не вдалося видалити. Перевірте дозволи й повторіть спробу.", showInFinder: "Показати у Finder", showInSystem: "Показати у файловому менеджері", revealFailed: "Не вдалося показати елемент у файловому менеджері.", newNote: "Нова нотатка", newFolder: "Нова тека", create: "Створити", createFailed: "Не вдалося створити. Перевірте назву, місце призначення та дозволи.", untitledNote: "Без назви", untitledFolder: "Тека без назви", fileName: "Назва", extensionKept: "Розширення файлу зберігається автоматично.", invalidName: "Введіть коректну назву без роздільників шляху та спеціальних символів.", renameFailed: "Не вдалося перейменувати. Перевірте назву й повторіть спробу.", cancel: "Скасувати", movedCount: "Переміщено {count} елементів до {folder}.", partialMove: "Переміщено {count} із {total} елементів. Решту не переміщено. Перевірте місце призначення й повторіть спробу.",
@@ -96,6 +106,7 @@ const UK: Dictionary = {
 };
 
 const DE: Dictionary = {
+  newCanvas: "Neuer Canvas", untitledCanvas: "Unbenannter Canvas", showInGallery: "In Visueller Galerie anzeigen",
   sectionInterface: "Oberfläche", sectionLayout: "Kartenlayout", sectionBrowsing: "Standardansicht", sectionIcons: "Symbole", sectionCache: "Vorschaubild-Cache",
   iconOriginal: "Ursprüngliches Ordnersymbol", iconFolder: "Ordner", iconFolders: "Mehrere Ordner", iconArchive: "Archiv", iconBox: "Box", iconLibrary: "Bibliothek", iconBook: "Offenes Buch", iconHeart: "Favoritenordner", iconCog: "Ordnereinstellungen", iconTree: "Ordnerbaum", iconGrid: "Raster", iconGallery: "Galerie", iconImages: "Bilder", iconFilm: "Film", iconClapperboard: "Filmklappe", iconPalette: "Palette", iconHome: "Startseite",
   viewTitle: "Visuelle Galerie", gallery: "Visuelle Galerie", rename: "Umbenennen", delete: "Löschen", deleteFailed: "Löschen fehlgeschlagen. Prüfe die Zugriffsrechte und versuche es erneut.",
@@ -116,6 +127,7 @@ const DE: Dictionary = {
 };
 
 const ES: Dictionary = {
+  newCanvas: "Nuevo lienzo", untitledCanvas: "Lienzo sin título", showInGallery: "Mostrar en Galería visual",
   sectionInterface: "Interfaz", sectionLayout: "Diseño de tarjetas", sectionBrowsing: "Navegación predeterminada", sectionIcons: "Iconos", sectionCache: "Caché de miniaturas",
   iconOriginal: "Icono de carpeta original", iconFolder: "Carpeta", iconFolders: "Carpetas", iconArchive: "Archivo", iconBox: "Caja", iconLibrary: "Biblioteca", iconBook: "Libro abierto", iconHeart: "Carpeta favorita", iconCog: "Ajustes de carpeta", iconTree: "Árbol de carpetas", iconGrid: "Cuadrícula", iconGallery: "Galería", iconImages: "Imágenes", iconFilm: "Película", iconClapperboard: "Claqueta", iconPalette: "Paleta", iconHome: "Inicio",
   viewTitle: "Galería visual", gallery: "Galería visual", rename: "Renombrar", delete: "Eliminar", deleteFailed: "No se pudo eliminar. Comprueba los permisos e inténtalo de nuevo.", showInFinder: "Mostrar en Finder", showInSystem: "Mostrar en el gestor de archivos", revealFailed: "No se pudo mostrar este elemento en el gestor de archivos.",
@@ -132,6 +144,7 @@ const ES: Dictionary = {
 };
 
 const FR: Dictionary = {
+  newCanvas: "Nouveau canevas", untitledCanvas: "Canevas sans titre", showInGallery: "Afficher dans la Galerie visuelle",
   sectionInterface: "Interface", sectionLayout: "Disposition des cartes", sectionBrowsing: "Navigation par défaut", sectionIcons: "Icônes", sectionCache: "Cache des miniatures",
   iconOriginal: "Icône de dossier d’origine", iconFolder: "Dossier", iconFolders: "Dossiers", iconArchive: "Archive", iconBox: "Boîte", iconLibrary: "Bibliothèque", iconBook: "Livre ouvert", iconHeart: "Dossier favori", iconCog: "Réglages du dossier", iconTree: "Arborescence", iconGrid: "Grille", iconGallery: "Galerie", iconImages: "Images", iconFilm: "Film", iconClapperboard: "Clap", iconPalette: "Palette", iconHome: "Accueil",
   viewTitle: "Galerie visuelle", gallery: "Galerie visuelle", rename: "Renommer", delete: "Supprimer", deleteFailed: "Suppression impossible. Vérifiez les permissions et réessayez.", showInFinder: "Afficher dans le Finder", showInSystem: "Afficher dans le gestionnaire de fichiers", revealFailed: "Impossible d’afficher cet élément dans le gestionnaire de fichiers.",
@@ -146,6 +159,7 @@ const FR: Dictionary = {
 };
 
 const IT: Dictionary = {
+  newCanvas: "Nuova Canvas", untitledCanvas: "Canvas senza titolo", showInGallery: "Mostra nella Galleria visuale",
   sectionInterface: "Interfaccia", sectionLayout: "Layout delle schede", sectionBrowsing: "Navigazione predefinita", sectionIcons: "Icone", sectionCache: "Cache delle miniature",
   iconOriginal: "Icona cartella originale", iconFolder: "Cartella", iconFolders: "Cartelle", iconArchive: "Archivio", iconBox: "Scatola", iconLibrary: "Biblioteca", iconBook: "Libro aperto", iconHeart: "Cartella preferita", iconCog: "Impostazioni cartella", iconTree: "Albero delle cartelle", iconGrid: "Griglia", iconGallery: "Galleria", iconImages: "Immagini", iconFilm: "Pellicola", iconClapperboard: "Ciak", iconPalette: "Tavolozza", iconHome: "Home",
   viewTitle: "Galleria visuale", gallery: "Galleria visuale", rename: "Rinomina", delete: "Elimina", deleteFailed: "Impossibile eliminare. Controlla i permessi e riprova.", showInFinder: "Mostra nel Finder", showInSystem: "Mostra nel gestore file", revealFailed: "Impossibile mostrare questo elemento nel gestore file.", newNote: "Nuova nota", newFolder: "Nuova cartella", create: "Crea", createFailed: "Impossibile creare. Controlla nome, destinazione e permessi.", untitledNote: "Senza titolo", untitledFolder: "Cartella senza titolo", fileName: "Nome", extensionKept: "L’estensione del file viene mantenuta automaticamente.", invalidName: "Inserisci un nome valido senza separatori di percorso o caratteri speciali.", renameFailed: "Impossibile rinominare. Controlla il nome e riprova.", cancel: "Annulla",

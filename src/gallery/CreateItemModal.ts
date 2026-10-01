@@ -8,8 +8,8 @@ export class CreateItemModal extends Modal {
 
   onOpen(): void {
     const t = (key: Parameters<typeof translate>[1]) => translate(this.language, key);
-    this.titleEl.setText(t(this.kind === "note" ? "newNote" : "newFolder"));
-    let value = t(this.kind === "note" ? "untitledNote" : "untitledFolder");
+    this.titleEl.setText(t(this.kind === "note" ? "newNote" : this.kind === "canvas" ? "newCanvas" : "newFolder"));
+    let value = t(this.kind === "note" ? "untitledNote" : this.kind === "canvas" ? "untitledCanvas" : "untitledFolder");
     const error = this.contentEl.createDiv({ cls: "visual-gallery-error" });
     error.setAttr("role", "alert");
     let busy = false;
