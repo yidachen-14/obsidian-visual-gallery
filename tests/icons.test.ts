@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { FOLDER_ICONS, NAVIGATION_ICONS, validIcon } from "../src/gallery/Icons";
+import { centeredIconViewBox, FOLDER_ICONS, NAVIGATION_ICONS, validIcon } from "../src/gallery/Icons";
 
 describe("icon choices", () => {
   it("retains the original glyph and removes the duplicate folder-open option", () => {
@@ -17,5 +17,10 @@ describe("icon choices", () => {
     expect(validIcon("film", NAVIGATION_ICONS, "layout-grid")).toBe("film");
     expect(validIcon("unknown", NAVIGATION_ICONS, "layout-grid")).toBe("layout-grid");
     expect(validIcon("folder-open", FOLDER_ICONS, "folder")).toBe("folder");
+  });
+  it("centers actual artwork instead of a top-heavy viewport/font baseline", () => {
+    expect(centeredIconViewBox({x: 2, y: 3, width: 20, height: 17}, 24, 24)).toBe("0 -0.5 24 24");
+    expect(centeredIconViewBox({x: 0, y: -16, width: 18, height: 18}, 24, 24)).toBe("-3 -19 24 24");
+    expect(centeredIconViewBox({x: 0, y: 0, width: 0, height: 0}, 24, 24)).toBeNull();
   });
 });

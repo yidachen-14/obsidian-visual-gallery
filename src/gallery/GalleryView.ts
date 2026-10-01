@@ -1,4 +1,4 @@
-import { ItemView, Notice, Platform, TAbstractFile, TFile, TFolder, type ViewStateResult, type WorkspaceLeaf } from "obsidian";
+import { ItemView, Notice, Platform, TAbstractFile, TFile, TFolder, setIcon, type ViewStateResult, type WorkspaceLeaf } from "obsidian";
 import { renderGalleryIcon } from "./Icons";
 import { draggedItems, planCardMoves, startCardDrag } from "./CardDrag";
 import { CardSelection } from "./Selection";
@@ -7,6 +7,8 @@ import { MarqueeSelection } from "./MarqueeSelection";
 import { CreateItemModal } from "./CreateItemModal";
 import { canRevealItem, deleteGalleryItem, revealGalleryItem } from "./ItemActions";
 import { cardMenu, creationMenu, sortMenu } from "./Menus";
+import { syncGalleryLayout } from "./Layout";
+import { COVER_COLOR_KEYS } from "../SettingsModel";
 import {
   getBreadcrumbFolders,
   listGalleryEntries,
@@ -36,6 +38,7 @@ export class GalleryView extends ItemView {
   private renderVersion = 0;
   private refreshTimer: number | null = null;
   private observer: IntersectionObserver | null = null;
+  private layoutObserver: ResizeObserver | null = null;
   private readonly selection = new CardSelection();
   private order: string[] = [];
   private dragging = false;
@@ -115,6 +118,8 @@ export class GalleryView extends ItemView {
     this.renderVersion += 1;
     this.observer?.disconnect();
     this.observer = null;
+    this.layoutObserver?.disconnect();
+    this.layoutObserver = null;
     if (this.refreshTimer !== null) window.clearTimeout(this.refreshTimer);
   }
 
@@ -127,18 +132,21 @@ export class GalleryView extends ItemView {
     const version = ++this.renderVersion;
     this.observer?.disconnect();
     this.observer = null;
+    this.layoutObserver?.disconnect();
+    this.layoutObserver = null;
     this.contentEl.empty();
 
     const folder = this.resolveFolder();
     this.folderPath = folder.path;
     const settings = this.getSettings();
     const language = settings.language;
-    for (const key of ["lightStart", "lightEnd", "darkStart", "darkEnd"] as const) {
+    for (const key of COVER_COLOR_KEYS) {
       this.contentEl.style.setProperty(`--vg-${key}`, settings[key]);
     }
     const shell = this.contentEl.createDiv({ cls: "visual-gallery-shell" });
     shell.style.setProperty("--vg-card-width", `${settings.cardWidth}px`);
-    const header = shell.createDiv({ cls: "visual-gallery-header" });
+    const layout = shell.createDiv({ cls: "visual-gallery-layout" });
+    const header = layout.createDiv({ cls: "visual-gallery-header" });
     const titleArea = header.createDiv({ cls: "visual-gallery-title-area" });
     titleArea.createEl("h2", { text: folder.isRoot() ? settings.galleryTitle.trim() || translate(language, "viewTitle") : folder.name });
     titleArea.createDiv({
@@ -146,10 +154,14 @@ export class GalleryView extends ItemView {
       text: translate(language, "itemCount", { count: folder.children.length }),
     });
     this.renderControls(header, language);
-    this.renderBreadcrumbs(shell, folder);
+    this.renderBreadcrumbs(layout, folder);
 
-    const grid = shell.createDiv({ cls: "visual-gallery-grid" });
+    const grid = layout.createDiv({ cls: "visual-gallery-grid" });
     const entries = listGalleryEntries(folder, this.filter, this.sort);
+    const syncLayout = () => syncGalleryLayout(shell, layout, grid, entries.length, settings.cardWidth);
+    syncLayout();
+    this.layoutObserver = new ResizeObserver(syncLayout);
+    this.layoutObserver.observe(shell);
     this.order = entries.map(entry => entry.item.path);
     this.selection.retain(this.order);
     if (entries.length === 0) {
@@ -173,20 +185,28 @@ export class GalleryView extends ItemView {
 
   private renderControls(header: HTMLElement, language: UiLanguage): void {
     const controls = header.createDiv({ cls: "visual-gallery-controls" });
-    const filter = controls.createEl("select", { cls: "dropdown visual-gallery-select" });
+    const filterControl = controls.createDiv({ cls: "visual-gallery-filter" });
+    const filter = filterControl.createEl("select", { cls: "dropdown visual-gallery-select" });
     filter.setAttr("aria-label", translate(language, "filterAria"));
     for (const value of GALLERY_FILTERS) {
       const option = filter.createEl("option", { text: filterLabel(language, value) });
       option.value = value;
       option.selected = value === this.filter;
     }
+    // A real icon is independent of themes' dropdown background images/blends.
+    const filterIcon = filterControl.createSpan({ cls: "visual-gallery-filter-icon", attr: { "aria-hidden": "true" } });
+    setIcon(filterIcon, "chevrons-up-down");
     filter.addEventListener("change", () => {
       this.filter = filter.value as GalleryFilter;
       this.render();
     });
 
-    const sort = controls.createEl("button", { cls: "visual-gallery-sort", text: sortLabel(language, this.sort), attr: { type: "button", "aria-haspopup": "menu" } });
+    const sort = controls.createEl("button", { cls: "visual-gallery-sort", attr: { type: "button", "aria-haspopup": "menu" } });
+    sort.createSpan({ cls: "visual-gallery-sort-label", text: sortLabel(language, this.sort) });
+    const sortIcon = sort.createSpan({ cls: "visual-gallery-sort-icon", attr: { "aria-hidden": "true" } });
+    setIcon(sortIcon, "chevrons-up-down");
     sort.setAttr("aria-label", translate(language, "sortAria"));
+    sort.setAttr("title", sortLabel(language, this.sort));
     sort.addEventListener("click", () => {
       const bounds = sort.getBoundingClientRect();
       sortMenu(language, this.sort, value => { this.sort = value; this.render(); })
@@ -281,7 +301,7 @@ export class GalleryView extends ItemView {
       if (!this.selection.paths.has(entry.item.path)) this.selectCard(entry.item.path);
       const language = this.getSettings().language;
       cardMenu(language, Platform.isMacOS, canRevealItem(this.app),
-        () => new RenameModal(this.app, entry.item, language).open(),
+        this.selection.paths.size === 1 ? () => new RenameModal(this.app, entry.item, language).open() : null,
         () => void deleteGalleryItem(this.app, entry.item).then(deleted => {
           if (deleted) { this.selection.paths.delete(entry.item.path); this.scheduleRefresh(); }
         }).catch(error => { console.error("[Visual Gallery] Delete failed", error); new Notice(translate(language, "deleteFailed")); }),
@@ -348,7 +368,8 @@ export class GalleryView extends ItemView {
       const items = draggedItems(this.app);
       if (!items.length) return;
       event.preventDefault();
-      event.stopPropagation();
+      // Keep bubbling: Obsidian's window listener moves its native drag ghost.
+      // preventDefault claims the target so ancestor drop handlers skip it.
       const plan = planCardMoves(items, folder, path => !!this.app.vault.getAbstractFileByPath(path));
       const allowed = !this.moving && !plan.error && plan.moves.length > 0;
       if (event.dataTransfer) event.dataTransfer.dropEffect = allowed ? "move" : "none";
@@ -364,7 +385,7 @@ export class GalleryView extends ItemView {
       const items = draggedItems(this.app);
       if (!items.length) return;
       event.preventDefault();
-      event.stopPropagation();
+      // The native window drop listener must also receive this for cleanup.
       this.clearDropHighlights();
       if (this.moving) return;
       const currentFolder = folder.isRoot() ? this.app.vault.getRoot() : this.app.vault.getAbstractFileByPath(folder.path);

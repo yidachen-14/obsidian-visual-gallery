@@ -1,6 +1,6 @@
 {
   "name": "obsidian-visual-gallery",
-  "version": "0.1.10",
+  "version": "0.1.14",
   "description": "A visual vault browser with whole-canvas thumbnails for Obsidian.",
   "main": "main.js",
   "type": "module",

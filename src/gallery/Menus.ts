@@ -13,9 +13,9 @@ export function sortMenu(language: UiLanguage, current: GallerySort, choose: (so
 }
 
 export function cardMenu(language: UiLanguage, finder: boolean, revealEnabled: boolean,
-  rename: () => void, remove: () => void, reveal: () => void): Menu {
+  rename: (() => void) | null, remove: () => void, reveal: () => void): Menu {
   const menu = new Menu();
-  menu.addItem(item => item.setTitle(translate(language, "rename")).setIcon("pencil").onClick(rename));
+  if (rename) menu.addItem(item => item.setTitle(translate(language, "rename")).setIcon("pencil").onClick(rename));
   menu.addItem(item => item.setTitle(translate(language, finder ? "showInFinder" : "showInSystem"))
     .setIcon("folder-search").setDisabled(!revealEnabled).onClick(reveal));
   menu.addSeparator();

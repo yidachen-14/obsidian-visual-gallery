@@ -1,4 +1,4 @@
-import { Notice, Plugin, TAbstractFile, TFile, normalizePath, setIcon } from "obsidian";
+import { Notice, Plugin, TAbstractFile, TFile, normalizePath, setIcon, setTooltip, type Command } from "obsidian";
 import { ThumbnailCache } from "./cache/ThumbnailCache";
 import { CanvasRenderer } from "./canvas/CanvasRenderer";
 import { GALLERY_VIEW_TYPE, GalleryView } from "./gallery/GalleryView";
@@ -11,8 +11,7 @@ import {
 import { CANVAS_RENDERER_VERSION, CanvasThumbnailProvider } from "./thumbnails/CanvasThumbnailProvider";
 import { PdfThumbnailProvider } from "./thumbnails/PdfThumbnailProvider";
 import { ThumbnailService } from "./thumbnails/ThumbnailService";
-import { FOLDER_ICONS, NAVIGATION_ICONS, validIcon } from "./gallery/Icons";
-import { validSort } from "./browser/VaultBrowser";
+import { loadGallerySettings } from "./SettingsModel";
 
 export default class VisualGalleryPlugin extends Plugin {
   private thumbnails: ThumbnailService | null = null;
@@ -21,17 +20,11 @@ export default class VisualGalleryPlugin extends Plugin {
   private cleanupTimer: number | null = null;
   private cleaning: Promise<void> | null = null;
   private ribbon: HTMLElement | null = null;
+  private readonly commandLabels: { command: Command; key: TranslationKey; prefix: string }[] = [];
 
   async onload(): Promise<void> {
     const saved = (await this.loadData() ?? {}) as Partial<VisualGallerySettings>;
-    this.gallerySettings = { ...DEFAULT_SETTINGS, ...saved };
-    this.gallerySettings.defaultSort = validSort(saved.defaultSort);
-    if (saved.appearanceDefaultsVersion === undefined && saved.darkStart?.toLowerCase() === "#4a4a4a") {
-      this.gallerySettings.darkStart = DEFAULT_SETTINGS.darkStart;
-    }
-    this.gallerySettings.appearanceDefaultsVersion = DEFAULT_SETTINGS.appearanceDefaultsVersion;
-    this.gallerySettings.folderIcon = validIcon(saved.folderIcon, FOLDER_ICONS, DEFAULT_SETTINGS.folderIcon);
-    this.gallerySettings.navigationIcon = validIcon(saved.navigationIcon, NAVIGATION_ICONS, DEFAULT_SETTINGS.navigationIcon);
+    this.gallerySettings = loadGallerySettings(saved);
     const pluginDirectory = this.manifest.dir
       ?? normalizePath(`${this.app.vault.configDir}/plugins/${this.manifest.id}`);
     const canvasCache = new ThumbnailCache(this.app.vault.adapter, pluginDirectory, CANVAS_RENDERER_VERSION);
@@ -59,27 +52,23 @@ export default class VisualGalleryPlugin extends Plugin {
       () => this.clearThumbnailCache(),
     ));
     this.ribbon = this.addRibbonIcon(this.gallerySettings.navigationIcon, this.t("commandOpen"), () => void this.openGallery());
-    this.addCommand({
+    this.addLocalizedCommand("commandOpen", {
       id: "open-gallery",
-      name: this.t("commandOpen"),
       callback: () => void this.openGallery(),
     });
 
-    this.addCommand({
+    this.addLocalizedCommand("commandRebuild", {
       id: "rebuild-all-canvas-thumbnails",
-      name: this.t("commandRebuild"),
       callback: () => void this.rebuildAllCanvasThumbnails(),
     });
 
-    this.addCommand({
+    this.addLocalizedCommand("commandClear", {
       id: "clear-thumbnail-cache",
-      name: this.t("commandClear"),
       callback: () => void this.clearThumbnailCache(),
     });
 
-    this.addCommand({
+    this.addLocalizedCommand("commandGenerate", {
       id: "generate-canvas-thumbnail",
-      name: this.t("commandGenerate"),
       checkCallback: (checking) => {
         const file = this.app.workspace.getActiveFile();
         const available = file instanceof TFile && file.extension.toLowerCase() === "canvas";
@@ -172,9 +161,21 @@ export default class VisualGalleryPlugin extends Plugin {
 
   private async updateSettings(settings: VisualGallerySettings): Promise<void> {
     this.gallerySettings = settings;
-    if (this.ribbon) setIcon(this.ribbon, settings.navigationIcon);
+    if (this.ribbon) {
+      setIcon(this.ribbon, settings.navigationIcon);
+      setTooltip(this.ribbon, this.t("commandOpen"), { placement: "right" });
+    }
+    for (const { command, key, prefix } of this.commandLabels) command.name = prefix + this.t(key);
     await this.saveData(settings);
     this.refreshGalleryViews();
+  }
+
+  private addLocalizedCommand(key: TranslationKey, definition: Omit<Command, "name">): void {
+    const name = this.t(key);
+    const command = this.addCommand({ ...definition, name });
+    // Preserve the host's plugin-name prefix instead of hardcoding its format.
+    const prefix = command.name.endsWith(name) ? command.name.slice(0, -name.length) : "";
+    this.commandLabels.push({ command, key, prefix });
   }
 
   private async rebuildAllCanvasThumbnails(): Promise<void> {

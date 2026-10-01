@@ -2,10 +2,10 @@ import { describe, expect, it, vi } from "vitest";
 import { Menu as StubMenu, MenuItem } from "./obsidian-stub";
 import { cardMenu, creationMenu, sortMenu } from "../src/gallery/Menus";
 import { GALLERY_SORTS } from "../src/browser/VaultBrowser";
-import { sortLabel, translate } from "../src/i18n";
+import { UI_LANGUAGES, sortLabel, translate } from "../src/i18n";
 
 describe("native gallery menus", () => {
-  it.each(["en", "zh-TW", "zh-CN", "ja"] as const)("has six grouped sort options and one checkmark in %s", language => {
+  it.each(UI_LANGUAGES)("has six grouped sort options and one checkmark in %s", language => {
     const choose = vi.fn();
     const menu = sortMenu(language, "created-asc", choose) as unknown as StubMenu;
     expect(menu.items).toHaveLength(8);
@@ -35,5 +35,13 @@ describe("native gallery menus", () => {
     expect(create.mock.calls.map(call => call[0])).toEqual(["note", "folder"]);
     const nonLocal = cardMenu("en", false, false, () => {}, () => {}, () => {}) as unknown as StubMenu;
     expect(nonLocal.items[1]?.disabled).toBe(true);
+  });
+  it.each(UI_LANGUAGES)("omits rename entirely for a multi-selection in %s", language => {
+    const remove = vi.fn(), reveal = vi.fn();
+    const menu = cardMenu(language, true, true, null, remove, reveal) as unknown as StubMenu;
+    expect(menu.items.map(item => item?.title)).toEqual([translate(language, "showInFinder"), undefined, translate(language, "delete")]);
+    expect(menu.items.some(item => item?.title === translate(language, "rename"))).toBe(false);
+    menu.items.forEach(item => item?.callback());
+    expect(remove).toHaveBeenCalledOnce(); expect(reveal).toHaveBeenCalledOnce();
   });
 });

@@ -1,4 +1,102 @@
-# Visual Gallery 0.1.10
+# Visual Gallery 0.1.14
+
+- Keep the folder title, filter and sort on one header row, including empty,
+  one-card and two-card galleries. Expand only the header when needed; retain
+  exact card/grid widths and truncate long labels instead of wrapping controls.
+- Restore the sort control's independent, pointer-transparent chevrons.
+- Organize settings into seven native sections: interface, card layout,
+  browsing defaults, icons, folder colors, note colors and thumbnail cache.
+- Provide complete interfaces in 18 languages: English, Simplified Chinese,
+  Traditional Chinese, Japanese, Korean, German, Spanish, French, Italian,
+  Brazilian Portuguese, Russian, Ukrainian, Dutch, Polish, Turkish,
+  Indonesian, Vietnamese and Thai. Language changes also update commands,
+  the navigation tooltip and accessible icon labels without resetting colors.
+- Include the unpublished 0.1.11–0.1.13 fixes: locked uniform outside card
+  strokes, compact controls, centered folder artwork, separate folder/note
+  gradients, no multi-selection Rename and smooth native drag-ghost tracking.
+
+Verified: 189 automated tests and production build; host-style browser checks
+cover 864 layout cases and 216 sparse-gallery cases. Native Obsidian 1.13.7
+passes 18 settings-language checks, 1,080 toolbar checks, 72 sparse-header
+checks, 648 outline cases and 60 full-surface cases. Native drag-manager
+checks pass 21 gallery and nine sidebar positions with no frozen ghosts or
+missed cleanup; synthetic no-op drops preserve all file paths. Native light/
+dark captures were inspected. Full OS mouse-drag E2E and personal-vault
+performance are not claimed. The user's saved appearance was preserved.
+
+## 0.1.13
+
+- Restore the compact filter's chevrons as an independent, aria-hidden SVG.
+  It follows theme text color, cannot intercept pointer input and does not
+  depend on a theme's dropdown background image/blending. Preserve active-label
+  sizing and the toolbar's occupied-card-column alignment.
+- Fix the native floating filename ghost freezing over gallery folders.
+  Folder dragover/drop claim their targets with preventDefault but keep
+  bubbling to Obsidian's window drag manager for pointer tracking and cleanup.
+  Retain original native file/folder/multi-file payloads and move preflight.
+- Add build gates preventing blocked drag-event propagation and disappearing
+  or oversized filter icons. Do not change the locked card outline geometry.
+
+Verified locally: 85 tests in 16 suites and production build. Native Obsidian
+1.13.7 reproduces 21 stuck hover positions and three missed drop cleanups with
+0.1.12; the same gallery file/folder/multi-selection checks pass with 0.1.13,
+plus nine native sidebar hover positions. These are real host handlers with
+synthetic drag events, not a full OS mouse-drag E2E claim. No-op drops leave all
+vault item paths unchanged. Forty live filter/theme/language cases and an
+actual native filter-menu choice pass. Browser host-style checks pass 192
+layout cases; native 648 outline cases remain unchanged. Native light/dark
+captures confirm visible chevrons, compact sizing and matching toolbar edges.
+Preferences were restored; only the disposable test plugin was updated. This
+is a local package, not a new public release.
+
+## 0.1.12
+
+- Hide Rename when right-clicking a selected card in a multiple selection.
+  Preserve the single-card menu and normal right-click selection behavior.
+- Fit the filter control to the active label and align filter/sort controls
+  with the last occupied card column. Recalculate on pane, card width and item
+  count changes; narrow panes use a fluid column without protruding controls.
+- Center folder artwork within the colored cover. Retain all ten choices,
+  including the original glyph; normalize its visible ink rather than its
+  asymmetric font baseline box and retry after layout/fonts become available.
+- Separate Folder cover colors and Note card cover colors, with independent
+  light/dark gradient endpoints and translated headings in all four languages.
+  Existing customized shared colors seed both groups on upgrade; subsequent
+  changes remain independent. Image content is not recolored.
+- Preserve the locked 0.1.11 outside-stroke geometry and add layout, migration,
+  icon and multi-selection menu regression gates.
+
+Verified locally: 81 automated tests and production build. Installed Obsidian
+1.13.7 CSS/icon assets pass 192 layout/color cases across themes, four languages,
+six card widths and four pane widths; all eight native swatches remain circular
+and unclipped. Native Obsidian passes 144 layout cases with changing filters,
+ten visible artwork centers, independent color input/save checks, 648 outline
+cases, 60 full-surface cases and existing marquee/selection checks. Actual
+native mouse/keyboard context menus omit Rename for multiple selection and
+retain it for a single card. The real settings window exposes both color groups
+and eight endpoints; actual native light/dark gallery captures were inspected.
+This is a local update package, not a new public release. Only the disposable
+test-vault installation was updated; formal personal-vault files were untouched.
+
+## 0.1.11
+
+- Fix inset ordinary card borders at the lower corners. Normal, selected and
+  drop-target cards now share one outside, zero-blur stroke around the exact
+  surface curve, including at fractional zoom. No overlapping second ring.
+- Lock the card geometry in `AGENTS.md`, `docs/CARD_GEOMETRY.md` and a mandatory
+  build-time CSS contract test. Add host-style regression coverage for normal
+  borders as well as selection, all four corners and zoomed/stretched cards.
+- Preserve card dimensions, covers, gradients, shadows, icons and interactions.
+
+Verified locally: 65 automated tests and production build; 648 geometry cases
+pass with installed Obsidian CSS in Chromium and 648 in native Obsidian 1.13.7.
+The old 0.1.10 CSS fails the new contract. Native 60-card full-surface layout
+checks show zero top/bottom gaps; selection, blank cancellation and marquee
+integration checks pass. Actual native light/dark renderer captures were
+inspected for ordinary and selected cards, including both lower corners.
+0.1.11 is a local fix package; the public release remains 0.1.10 until published.
+
+## 0.1.10
 
 - Updated the bundled PDF engine to PDF.js 5.4.624, compatible with Obsidian 1.13.7. The obsolete script-injection fallback and its vulnerable legacy dependency chain are no longer present.
 - PDF workers use a local module Blob; remote worker/asset fetching and optional WebAssembly loading are disabled. PDF files are supplied as vault bytes.

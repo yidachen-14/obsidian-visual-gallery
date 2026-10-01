@@ -11,15 +11,15 @@ Browse your Obsidian vault as a visual card gallery, with thumbnails of the **wh
 - Single-click to select; double-click to open. Command/Ctrl-click toggles individual cards, Shift-click selects a range, and dragging blank space selects a rectangle. Escape or a blank-space click clears selection.
 - Drag files and folders to gallery folders, breadcrumbs or the native file explorer. Dragging an unselected card works immediately; dragging a selected card moves the selection.
 - Right-click a card to rename it, delete it or reveal its original file in Finder/system file manager. Right-click blank space to create a note or folder.
-- English, Simplified Chinese, Traditional Chinese and Japanese interfaces. New installations default to English.
-- Adjustable card width, gallery heading, light/dark cover gradients, folder icons and ribbon icons.
+- 18 interface languages: English, Simplified Chinese, Traditional Chinese, Japanese, Korean, German, Spanish, French, Italian, Brazilian Portuguese, Russian, Ukrainian, Dutch, Polish, Turkish, Indonesian, Vietnamese and Thai. New installations default to English; upgrading preserves your choice.
+- Adjustable card width, gallery heading, independent folder/note light/dark cover gradients, folder icons and ribbon icons.
 - Local thumbnail caching, lazy generation, progressive rendering and automatic removal of stale or orphaned previews.
 
 ## Installation
 
-Once accepted into the Community directory, install **Visual Gallery** from **Settings → Community plugins → Browse**.
+**Visual Gallery** is listed in the [Obsidian Community directory](https://community.obsidian.md/plugins/visual-gallery). In Obsidian, install it from **Settings → Community plugins → Browse** when the catalog has propagated to your client.
 
-Until then, install manually from the [GitHub releases](https://github.com/yidachen-14/obsidian-visual-gallery/releases):
+You can also install manually from the [GitHub releases](https://github.com/yidachen-14/obsidian-visual-gallery/releases):
 
 1. Download `main.js`, `manifest.json` and `styles.css` from the same release.
 2. Create `<vault>/.obsidian/plugins/visual-gallery/` and put those three files inside it.
@@ -38,6 +38,14 @@ Drag-and-drop and rename act on **original files**, not previews. Moves through 
 **Delete uses Obsidian's native deletion flow and preferences.** If you disabled confirmation or selected permanent deletion in Obsidian, those preferences also apply here. The card menu acts on the right-clicked item, not the entire selection.
 
 Settings include a read-only cache location and **Clear thumbnail cache**. Clearing the cache removes disposable previews only; the next gallery visit regenerates them. Commands can also rebuild all Canvas previews or generate a preview for the active Canvas.
+
+Settings are grouped into Interface, Card layout, Browsing defaults, Icons,
+Folder cover colors, Note card cover colors and Thumbnail cache. Changing the
+interface language updates the gallery, settings, command names and ribbon
+tooltip immediately; it never renames your files or replaces your custom title.
+Both filter and sort controls have theme-independent up/down chevrons.
+The folder title and both controls stay on one row even with very few cards;
+only the header expands when needed, without changing card or grid widths.
 
 ## Privacy and storage
 
@@ -69,6 +77,11 @@ pnpm run build
 ```
 
 The build runs the type checker and tests before generating `main.js`. `pnpm run dev` watches source files. Use a disposable test vault for file-management testing. Build outputs and personal vault contents are not committed.
+
+Card styles follow the locked [card geometry contract](docs/CARD_GEOMETRY.md)
+and [development constraints](AGENTS.md). The build rejects an inset or duplicate
+outline implementation. Changes also require real-host rendering checks of all
+four corners in ordinary, selected and drop-target states, in both themes.
 
 The bundled PDF.js 5.4.624 worker is loaded as a local module Blob and released when the plugin unloads. Remote PDF worker/asset fetching, dynamic font evaluation and optional WebAssembly loading are disabled. This version is tested against Obsidian 1.13.7's embedded browser. Third-party attribution and the full PDF.js license are embedded in the distributed bundle as well as included in this repository.
 

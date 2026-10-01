@@ -1,8 +1,19 @@
 import type { GallerySort } from "./browser/VaultBrowser";
-
-export type UiLanguage = "en" | "zh-TW" | "zh-CN" | "ja";
+import { validLanguage, type UiLanguage } from "./languages";
+import { EXTRA_TRANSLATIONS } from "./i18n-extra";
+export { LANGUAGE_OPTIONS, UI_LANGUAGES, validLanguage, type UiLanguage } from "./languages";
 
 const EN = {
+  sectionInterface: "Interface",
+  sectionLayout: "Card layout",
+  sectionBrowsing: "Browsing defaults",
+  sectionIcons: "Icons",
+  sectionCache: "Thumbnail cache",
+  iconOriginal: "Original folder icon", iconFolder: "Folder", iconFolders: "Folders",
+  iconArchive: "Archive", iconBox: "Box", iconLibrary: "Library", iconBook: "Open book",
+  iconHeart: "Favorite folder", iconCog: "Folder settings", iconTree: "Folder tree",
+  iconGrid: "Grid", iconGallery: "Gallery", iconImages: "Images", iconFilm: "Film",
+  iconClapperboard: "Clapperboard", iconPalette: "Palette", iconHome: "Home",
   viewTitle: "Visual Gallery",
   gallery: "Visual Gallery",
   rename: "Rename",
@@ -23,6 +34,8 @@ const EN = {
   iconName: "{name}",
   settingTitleDesc: "Custom heading on the gallery home page. Leave empty to use the translated default.",
   lightColors: "Light mode cover colors",
+  folderCoverColors: "Folder cover colors",
+  noteCoverColors: "Note card cover colors",
   darkColors: "Dark mode cover colors",
   gradientDesc: "Gradient from upper-left to lower-right. Applies to cover backgrounds, not the image itself.",
   gradientStart: "Upper-left color",
@@ -82,6 +95,8 @@ const EN = {
 export type TranslationKey = keyof typeof EN;
 
 const ZH: Record<TranslationKey, string> = {
+  sectionInterface: "介面", sectionLayout: "卡片版面", sectionBrowsing: "瀏覽預設", sectionIcons: "圖示", sectionCache: "縮圖快取",
+  iconOriginal: "原版資料夾圖示", iconFolder: "資料夾", iconFolders: "多個資料夾", iconArchive: "封存盒", iconBox: "盒子", iconLibrary: "書庫", iconBook: "書本", iconHeart: "愛心資料夾", iconCog: "齒輪資料夾", iconTree: "資料夾樹", iconGrid: "網格", iconGallery: "圖庫", iconImages: "圖片", iconFilm: "底片", iconClapperboard: "場記板", iconPalette: "調色盤", iconHome: "首頁",
   viewTitle: "視覺圖庫",
   gallery: "視覺圖庫",
   rename: "重新命名",
@@ -102,6 +117,8 @@ const ZH: Record<TranslationKey, string> = {
   iconName: "{name}",
   settingTitleDesc: "自訂圖庫首頁顯示的文字；留白時使用目前語言的預設名稱。",
   lightColors: "明亮模式封面顏色",
+  folderCoverColors: "資料夾封面顏色",
+  noteCoverColors: "筆記卡片封面顏色",
   darkColors: "暗黑模式封面顏色",
   gradientDesc: "從左上到右下的漸層底色，不會改變圖片本身。",
   gradientStart: "左上顏色",
@@ -159,6 +176,8 @@ const ZH: Record<TranslationKey, string> = {
 };
 
 const ZH_CN: Record<TranslationKey, string> = {
+  sectionInterface: "界面", sectionLayout: "卡片布局", sectionBrowsing: "浏览默认值", sectionIcons: "图标", sectionCache: "缩略图缓存",
+  iconOriginal: "原版文件夹图标", iconFolder: "文件夹", iconFolders: "多个文件夹", iconArchive: "归档盒", iconBox: "盒子", iconLibrary: "书库", iconBook: "书本", iconHeart: "爱心文件夹", iconCog: "齿轮文件夹", iconTree: "文件夹树", iconGrid: "网格", iconGallery: "图库", iconImages: "图片", iconFilm: "胶片", iconClapperboard: "场记板", iconPalette: "调色盘", iconHome: "首页",
   viewTitle: "视觉图库", gallery: "视觉图库",
   itemCount: "此文件夹共有 {count} 个项目", noMatches: "此文件夹没有符合条件的项目。",
   filterAria: "筛选图库项目", sortAria: "排列图库项目",
@@ -190,6 +209,7 @@ const ZH_CN: Record<TranslationKey, string> = {
   movedCount: "已将 {count} 个项目移至 {folder}。", partialMove: "已移动 {count}／{total} 个项目；其余项目未移动，请检查目标位置后重试。",
   settingFolderIcon: "文件夹卡片图标", settingNavigationIcon: "左侧导航图标", iconName: "{name}",
   settingTitle: "首页标题", settingTitleDesc: "自定义图库首页显示的文字；留空时使用当前语言的默认名称。",
+  folderCoverColors: "文件夹封面颜色", noteCoverColors: "笔记卡片封面颜色",
   lightColors: "明亮模式封面颜色", darkColors: "暗黑模式封面颜色", gradientDesc: "从左上到右下的渐变底色，不会改变图片本身。",
   gradientStart: "左上颜色", gradientEnd: "右下颜色", cacheLocation: "缓存位置（相对于仓库）",
   cacheDesc: "仅清除生成的 Canvas／PDF 缩略图，不会改动原始文件。当前显示的缩略图会按需重新生成；无效与孤立缩略图会自动清理。",
@@ -197,6 +217,8 @@ const ZH_CN: Record<TranslationKey, string> = {
 };
 
 const JA: Record<TranslationKey, string> = {
+  sectionInterface: "インターフェース", sectionLayout: "カードのレイアウト", sectionBrowsing: "閲覧の既定値", sectionIcons: "アイコン", sectionCache: "サムネイルキャッシュ",
+  iconOriginal: "従来のフォルダーアイコン", iconFolder: "フォルダー", iconFolders: "複数のフォルダー", iconArchive: "アーカイブ", iconBox: "ボックス", iconLibrary: "ライブラリ", iconBook: "本", iconHeart: "お気に入りフォルダー", iconCog: "設定フォルダー", iconTree: "フォルダーツリー", iconGrid: "グリッド", iconGallery: "ギャラリー", iconImages: "画像", iconFilm: "フィルム", iconClapperboard: "カチンコ", iconPalette: "パレット", iconHome: "ホーム",
   viewTitle: "ビジュアルギャラリー", gallery: "ビジュアルギャラリー",
   rename: "名前を変更", fileName: "名前", extensionKept: "拡張子は自動的に保持されます。",
   delete: "削除", deleteFailed: "項目を削除できませんでした。アクセス権を確認して再試行してください。",
@@ -210,6 +232,7 @@ const JA: Record<TranslationKey, string> = {
   settingTitle: "ホームの見出し", settingFolderIcon: "フォルダーカードのアイコン", settingNavigationIcon: "左側ナビゲーションのアイコン", iconName: "{name}",
   settingTitleDesc: "ギャラリーのホームに表示する見出し。空欄にすると、現在の言語の既定名を使用します。",
   lightColors: "ライトモードのカバー色", darkColors: "ダークモードのカバー色",
+  folderCoverColors: "フォルダーのカバー色", noteCoverColors: "ノートカードのカバー色",
   gradientDesc: "左上から右下へのグラデーション。カバーの背景に適用され、画像自体は変更しません。",
   gradientStart: "左上の色", gradientEnd: "右下の色",
   cacheLocation: "キャッシュの場所（保管庫からの相対パス）",
@@ -241,12 +264,16 @@ const JA: Record<TranslationKey, string> = {
   movedTo: "{name} を {folder} に移動しました。", moveFailed: "この項目を移動できませんでした。移動先を確認して再試行してください。",
 };
 
+export const TRANSLATIONS: Record<UiLanguage, Record<TranslationKey, string>> = {
+  en: EN, "zh-TW": ZH, "zh-CN": ZH_CN, ja: JA, ...EXTRA_TRANSLATIONS,
+};
+
 export function translate(
   language: UiLanguage,
   key: TranslationKey,
   values: Record<string, string | number> = {},
 ): string {
-  const template = (language === "zh-TW" ? ZH : language === "zh-CN" ? ZH_CN : language === "ja" ? JA : EN)[key];
+  const template = TRANSLATIONS[validLanguage(language)][key];
   return Object.entries(values).reduce(
     (result, [name, value]) => result.replaceAll(`{${name}}`, String(value)),
     template,

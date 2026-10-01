@@ -1,39 +1,9 @@
 import { App, Plugin, PluginSettingTab, Setting } from "obsidian";
 import { GALLERY_SORTS, type GalleryFilter, type GallerySort } from "./browser/VaultBrowser";
-import { sortLabel, translate, type UiLanguage } from "./i18n";
+import { LANGUAGE_OPTIONS, sortLabel, translate, validLanguage, type UiLanguage, type TranslationKey } from "./i18n";
 import { FOLDER_ICONS, NAVIGATION_ICONS, renderGalleryIcon } from "./gallery/Icons";
-
-export interface VisualGallerySettings {
-  language: UiLanguage;
-  cardWidth: number;
-  defaultFilter: GalleryFilter;
-  defaultSort: GallerySort;
-  showMetadata: boolean;
-  galleryTitle: string;
-  lightStart: string;
-  lightEnd: string;
-  darkStart: string;
-  darkEnd: string;
-  folderIcon: string;
-  navigationIcon: string;
-  appearanceDefaultsVersion: number;
-}
-
-export const DEFAULT_SETTINGS: VisualGallerySettings = {
-  language: "en",
-  cardWidth: 250,
-  defaultFilter: "all",
-  defaultSort: "modified",
-  showMetadata: true,
-  galleryTitle: "",
-  lightStart: "#f7f7f5",
-  lightEnd: "#eeeeeb",
-  darkStart: "#262626",
-  darkEnd: "#222222",
-  folderIcon: "folder",
-  navigationIcon: "layout-grid",
-  appearanceDefaultsVersion: 1,
-};
+import type { VisualGallerySettings } from "./SettingsModel";
+export { DEFAULT_SETTINGS, type VisualGallerySettings } from "./SettingsModel";
 
 export class VisualGallerySettingTab extends PluginSettingTab {
   constructor(
@@ -56,19 +26,56 @@ export class VisualGallerySettingTab extends PluginSettingTab {
     });
     this.containerEl.empty();
     this.containerEl.addClass("visual-gallery-settings");
-    new Setting(this.containerEl).setName(t("viewTitle")).setHeading();
+    const heading = (key: TranslationKey) => {
+      const row = new Setting(this.containerEl).setName(t(key)).setHeading();
+      row.settingEl.dataset.section = key;
+    };
+    heading("sectionInterface");
 
     new Setting(this.containerEl)
       .setName(t("settingLanguage"))
       .setDesc(t("settingLanguageDesc"))
       .addDropdown((dropdown) => dropdown
-        .addOptions({ en: "English", "zh-CN": "简体中文", "zh-TW": "繁體中文", ja: "日本語" })
+        .addOptions(LANGUAGE_OPTIONS)
         .setValue(settings.language)
-        .onChange((value) => void save({ language: value as UiLanguage }).then(() => this.display())));
+        .onChange((value) => void save({ language: validLanguage(value) }).then(() => this.display())));
 
     new Setting(this.containerEl).setName(t("settingTitle")).setDesc(t("settingTitleDesc"))
       .addText(input => input.setPlaceholder(t("viewTitle")).setValue(settings.galleryTitle)
         .onChange(value => void save({ galleryTitle: value })));
+
+    heading("sectionLayout");
+    new Setting(this.containerEl)
+      .setName(t("settingCardWidth"))
+      .setDesc(t("settingCardWidthDesc"))
+      .addSlider(slider => slider.setLimits(190, 360, 10).setValue(settings.cardWidth)
+        .setDynamicTooltip().onChange(value => void save({ cardWidth: value })));
+
+    new Setting(this.containerEl)
+      .setName(t("settingMetadata"))
+      .setDesc(t("settingMetadataDesc"))
+      .addToggle(toggle => toggle.setValue(settings.showMetadata)
+        .onChange(value => void save({ showMetadata: value })));
+
+    heading("sectionBrowsing");
+    new Setting(this.containerEl)
+      .setName(t("settingDefaultFilter"))
+      .setDesc(t("settingDefaultFilterDesc"))
+      .addDropdown(dropdown => dropdown.addOptions({
+        all: t("filterAll"), canvas: t("filterCanvas"), notes: t("filterNotes"),
+        images: t("filterImages"), pdf: t("filterPdf"),
+      }).setValue(settings.defaultFilter)
+        .onChange(value => void save({ defaultFilter: value as GalleryFilter })));
+
+    new Setting(this.containerEl)
+      .setName(t("settingDefaultSort"))
+      .setDesc(t("settingDefaultSortDesc"))
+      .addDropdown(dropdown => dropdown
+        .addOptions(Object.fromEntries(GALLERY_SORTS.map(value => [value, sortLabel(settings.language, value)])))
+        .setValue(settings.defaultSort)
+        .onChange(value => void save({ defaultSort: value as GallerySort })));
+
+    heading("sectionIcons");
 
     for (const [key, label, choices] of [
       ["folderIcon", "settingFolderIcon", FOLDER_ICONS],
@@ -109,14 +116,22 @@ export class VisualGallerySettingTab extends PluginSettingTab {
       });
     }
 
-    for (const [start, end, label] of [["lightStart", "lightEnd", "lightColors"], ["darkStart", "darkEnd", "darkColors"]] as const) {
-      const row = new Setting(this.containerEl).setName(t(label)).setDesc(t("gradientDesc"))
-        .addColorPicker(picker => picker.setValue(settings[start]).onChange(value => void save({ [start]: value })))
-        .addColorPicker(picker => picker.setValue(settings[end]).onChange(value => void save({ [end]: value })));
-      row.settingEl.addClass("visual-gallery-color-setting");
-      row.controlEl.querySelectorAll("input[type=color]").forEach((input, index) => input.setAttr("aria-label", `${t(label)}: ${t(index === 0 ? "gradientStart" : "gradientEnd")}`));
+    for (const [heading, colors] of [
+      ["folderCoverColors", [["folderLightStart", "folderLightEnd", "lightColors"], ["folderDarkStart", "folderDarkEnd", "darkColors"]]],
+      ["noteCoverColors", [["lightStart", "lightEnd", "lightColors"], ["darkStart", "darkEnd", "darkColors"]]],
+    ] as const) {
+      const title = new Setting(this.containerEl).setName(t(heading)).setHeading();
+      title.settingEl.dataset.section = heading;
+      for (const [start, end, label] of colors) {
+        const row = new Setting(this.containerEl).setName(t(label)).setDesc(t("gradientDesc"))
+          .addColorPicker(picker => picker.setValue(settings[start]).onChange(value => void save({ [start]: value })))
+          .addColorPicker(picker => picker.setValue(settings[end]).onChange(value => void save({ [end]: value })));
+        row.settingEl.addClass("visual-gallery-color-setting");
+        row.controlEl.querySelectorAll("input[type=color]").forEach((input, index) => input.setAttr("aria-label", `${t(heading)} · ${t(label)}: ${t(index === 0 ? "gradientStart" : "gradientEnd")}`));
+      }
     }
 
+    heading("sectionCache");
     new Setting(this.containerEl).setName(t("cacheLocation")).setDesc(this.cachePath);
     new Setting(this.containerEl).setName(t("commandClear")).setDesc(t("cacheDesc"))
       .addButton(button => button.setButtonText(t("commandClear")).onClick(async () => {
@@ -125,62 +140,16 @@ export class VisualGallerySettingTab extends PluginSettingTab {
         finally { button.setDisabled(false); }
       }));
 
-    new Setting(this.containerEl)
-      .setName(t("settingCardWidth"))
-      .setDesc(t("settingCardWidthDesc"))
-      .addSlider((slider) => slider
-        .setLimits(190, 360, 10)
-        .setValue(settings.cardWidth)
-        .setDynamicTooltip()
-        .onChange((value) => void save({ cardWidth: value })));
-
-    new Setting(this.containerEl)
-      .setName(t("settingDefaultFilter"))
-      .setDesc(t("settingDefaultFilterDesc"))
-      .addDropdown((dropdown) => dropdown
-        .addOptions({
-          all: t("filterAll"),
-          canvas: t("filterCanvas"),
-          notes: t("filterNotes"),
-          images: t("filterImages"),
-          pdf: t("filterPdf"),
-        })
-        .setValue(settings.defaultFilter)
-        .onChange((value) => void save({
-          defaultFilter: value as GalleryFilter,
-        })));
-
-    new Setting(this.containerEl)
-      .setName(t("settingDefaultSort"))
-      .setDesc(t("settingDefaultSortDesc"))
-      .addDropdown((dropdown) => dropdown
-        .addOptions(Object.fromEntries(GALLERY_SORTS.map(value => [value, sortLabel(settings.language, value)])))
-        .setValue(settings.defaultSort)
-        .onChange((value) => void save({
-          defaultSort: value as GallerySort,
-        })));
-
-    new Setting(this.containerEl)
-      .setName(t("settingMetadata"))
-      .setDesc(t("settingMetadataDesc"))
-      .addToggle((toggle) => toggle
-        .setValue(settings.showMetadata)
-        .onChange((value) => void save({ showMetadata: value })));
   }
 }
 
-function iconLabel(language: UiLanguage, icon: string): string {
-  const labels: Record<string, [string, string, string, string]> = {
-    "legacy-folder": ["Original folder icon", "原版資料夾圖示", "原版文件夹图标", "従来のフォルダーアイコン"],
-    folder: ["Folder", "資料夾", "文件夹", "フォルダー"],
-    folders: ["Folders", "多個資料夾", "多个文件夹", "複数のフォルダー"], archive: ["Archive", "封存盒", "归档盒", "アーカイブ"],
-    box: ["Box", "盒子", "盒子", "ボックス"], library: ["Library", "書庫", "书库", "ライブラリ"], "book-open": ["Open book", "書本", "书本", "本"],
-    "folder-heart": ["Favorite folder", "愛心資料夾", "爱心文件夹", "お気に入りフォルダー"],
-    "folder-cog": ["Folder settings", "齒輪資料夾", "齿轮文件夹", "設定フォルダー"],
-    "folder-tree": ["Folder tree", "資料夾樹", "文件夹树", "フォルダーツリー"],
-    "layout-grid": ["Grid", "網格", "网格", "グリッド"], "gallery-horizontal": ["Gallery", "圖庫", "图库", "ギャラリー"],
-    images: ["Images", "圖片", "图片", "画像"], film: ["Film", "底片", "胶片", "フィルム"], clapperboard: ["Clapperboard", "場記板", "场记板", "カチンコ"],
-    palette: ["Palette", "調色盤", "调色盘", "パレット"], home: ["Home", "首頁", "首页", "ホーム"],
+export function iconLabel(language: UiLanguage, icon: string): string {
+  const keys: Record<string, TranslationKey> = {
+    "legacy-folder": "iconOriginal", folder: "iconFolder", folders: "iconFolders",
+    archive: "iconArchive", box: "iconBox", library: "iconLibrary", "book-open": "iconBook",
+    "folder-heart": "iconHeart", "folder-cog": "iconCog", "folder-tree": "iconTree",
+    "layout-grid": "iconGrid", "gallery-horizontal": "iconGallery", images: "iconImages",
+    film: "iconFilm", clapperboard: "iconClapperboard", palette: "iconPalette", home: "iconHome",
   };
-  return labels[icon]?.[language === "en" ? 0 : language === "zh-TW" ? 1 : language === "ja" ? 3 : 2] ?? icon;
+  return keys[icon] ? translate(language, keys[icon]) : icon;
 }
