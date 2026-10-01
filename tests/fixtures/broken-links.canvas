@@ -1,0 +1,7 @@
+{
+  "nodes": [
+    { "id": "missing-image", "type": "file", "x": 0, "y": 0, "width": 240, "height": 160, "file": "does-not-exist.png" },
+    { "id": "missing-note", "type": "file", "x": 300, "y": 0, "width": 240, "height": 160, "file": "missing.md" }
+  ],
+  "edges": [{ "id": "broken-edge", "fromNode": "missing-image", "toNode": "unknown" }]
+}

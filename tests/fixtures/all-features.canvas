@@ -1,0 +1,14 @@
+{
+  "nodes": [
+    { "id": "group", "type": "group", "x": -40, "y": -40, "width": 980, "height": 520, "label": "Creative project", "color": "6" },
+    { "id": "text", "type": "text", "x": 0, "y": 20, "width": 250, "height": 160, "text": "# Visual direction\nA recognizable whole-canvas preview.", "color": "5" },
+    { "id": "image", "type": "file", "x": 320, "y": 20, "width": 260, "height": 180, "file": "sample-image.svg" },
+    { "id": "note", "type": "file", "x": 640, "y": 20, "width": 250, "height": 210, "file": "sample-note.md", "color": "4" },
+    { "id": "link", "type": "link", "x": 0, "y": 270, "width": 250, "height": 140, "url": "https://jsoncanvas.org/spec/1.0/", "color": "2" },
+    { "id": "nested", "type": "file", "x": 340, "y": 260, "width": 300, "height": 170, "file": "nested.canvas" }
+  ],
+  "edges": [
+    { "id": "edge-1", "fromNode": "text", "fromSide": "right", "toNode": "image", "toSide": "left", "toEnd": "arrow", "label": "informs", "color": "5" },
+    { "id": "edge-2", "fromNode": "image", "fromSide": "bottom", "fromEnd": "arrow", "toNode": "nested", "toSide": "top", "toEnd": "arrow", "label": "both ways", "color": "3" }
+  ]
+}

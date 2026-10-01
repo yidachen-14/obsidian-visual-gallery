@@ -1,0 +1,7 @@
+{
+  "nodes": [
+    { "id": "left", "type": "text", "x": -50000, "y": 0, "width": 300, "height": 160, "text": "Far left" },
+    { "id": "right", "type": "text", "x": 50000, "y": 0, "width": 300, "height": 160, "text": "Far right" }
+  ],
+  "edges": [{ "id": "wide-edge", "fromNode": "left", "toNode": "right" }]
+}

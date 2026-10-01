@@ -1,0 +1,9 @@
+{
+  "nodes": [
+    { "id": "nested-text", "type": "text", "x": -120, "y": -60, "width": 240, "height": 120, "text": "Nested Canvas", "color": "1" },
+    { "id": "nested-note", "type": "file", "x": 180, "y": -40, "width": 220, "height": 150, "file": "sample-note.md" }
+  ],
+  "edges": [
+    { "id": "nested-edge", "fromNode": "nested-text", "toNode": "nested-note", "label": "nested" }
+  ]
+}

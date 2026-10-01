@@ -1,0 +1,11 @@
+node_modules/
+main.js
+*.map
+.DS_Store
+coverage/
+.test-build/
+.pnpm-store/
+artifacts/
+pdf.worker.min.js
+data.json
+thumbnail-cache/

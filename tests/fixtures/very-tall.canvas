@@ -1,0 +1,7 @@
+{
+  "nodes": [
+    { "id": "top", "type": "text", "x": 0, "y": -50000, "width": 220, "height": 160, "text": "Top" },
+    { "id": "bottom", "type": "text", "x": 0, "y": 50000, "width": 220, "height": 160, "text": "Bottom" }
+  ],
+  "edges": [{ "id": "tall-edge", "fromNode": "top", "toNode": "bottom" }]
+}
