@@ -30,7 +30,7 @@ export function startCardDrag(app: App, event: DragEvent, item: TAbstractFile | 
   const first = items[0];
   const drag = items.length > 1 ? manager.dragFiles?.(event, items, "visual-gallery")
     : first instanceof TFile ? manager.dragFile(event, first, "visual-gallery")
-    : manager.dragFolder(event, first as TFolder, "visual-gallery");
+    : first instanceof TFolder ? manager.dragFolder(event, first, "visual-gallery") : undefined;
   if (!drag) return false;
   manager.onDragStart(event, drag);
   event.dataTransfer.effectAllowed = "move";

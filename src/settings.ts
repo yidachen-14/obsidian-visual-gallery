@@ -56,7 +56,7 @@ export class VisualGallerySettingTab extends PluginSettingTab {
     });
     this.containerEl.empty();
     this.containerEl.addClass("visual-gallery-settings");
-    this.containerEl.createEl("h2", { text: t("viewTitle") });
+    new Setting(this.containerEl).setName(t("viewTitle")).setHeading();
 
     new Setting(this.containerEl)
       .setName(t("settingLanguage"))

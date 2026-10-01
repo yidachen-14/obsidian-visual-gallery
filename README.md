@@ -70,7 +70,7 @@ pnpm run build
 
 The build runs the type checker and tests before generating `main.js`. `pnpm run dev` watches source files. Use a disposable test vault for file-management testing. Build outputs and personal vault contents are not committed.
 
-The bundled PDF worker is loaded as a local Blob worker and released when the plugin unloads. Third-party attribution and the full PDF.js license are embedded in the distributed bundle as well as included in this repository.
+The bundled PDF.js 5.4.624 worker is loaded as a local module Blob and released when the plugin unloads. Remote PDF worker/asset fetching, dynamic font evaluation and optional WebAssembly loading are disabled. This version is tested against Obsidian 1.13.7's embedded browser. Third-party attribution and the full PDF.js license are embedded in the distributed bundle as well as included in this repository.
 
 ## License and credits
 

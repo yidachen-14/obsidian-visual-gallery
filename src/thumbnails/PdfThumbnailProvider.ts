@@ -5,7 +5,7 @@ import { ThumbnailCache } from "../cache/ThumbnailCache";
 import { AsyncQueue } from "../utils/AsyncQueue";
 import type { ThumbnailResult } from "./types";
 
-const PDF_RENDERER_VERSION = "pdfjs-v2";
+const PDF_RENDERER_VERSION = "pdfjs-v3";
 
 export class PdfThumbnailProvider {
   private readonly inflight = new Map<string, Promise<ThumbnailResult>>();
@@ -75,7 +75,15 @@ export class PdfThumbnailProvider {
     const sourcePath = file.path;
     const sourceMtime = file.stat.mtime;
     const data = new Uint8Array(await this.app.vault.readBinary(file));
-    const loadingTask = getDocument({ data, worker: this.worker.get(), isEvalSupported: false });
+    const loadingTask = getDocument({
+      data,
+      worker: this.worker.get(),
+      useWorkerFetch: false,
+      useWasm: false,
+      isEvalSupported: false,
+      disableFontFace: true,
+      useSystemFonts: true,
+    });
     try {
       const document = await loadingTask.promise;
       const page = await document.getPage(1);
@@ -89,7 +97,7 @@ export class PdfThumbnailProvider {
       if (!context) throw new Error("Could not create a PDF rendering context.");
       context.fillStyle = "#ffffff";
       context.fillRect(0, 0, canvas.width, canvas.height);
-      await page.render({ canvasContext: context, viewport }).promise;
+      await page.render({ canvas, viewport }).promise;
       const blob = await canvasToWebp(canvas);
       if (file.path !== sourcePath || file.stat.mtime !== sourceMtime || this.app.vault.getAbstractFileByPath(sourcePath) !== file) {
         throw new Error("PDF changed while its thumbnail was rendering.");

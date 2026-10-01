@@ -1,4 +1,11 @@
-# Visual Gallery 0.1.9
+# Visual Gallery 0.1.10
+
+- Updated the bundled PDF engine to PDF.js 5.4.624, compatible with Obsidian 1.13.7. The obsolete script-injection fallback and its vulnerable legacy dependency chain are no longer present.
+- PDF workers use a local module Blob; remote worker/asset fetching and optional WebAssembly loading are disabled. PDF files are supplied as vault bytes.
+- Settings headings now use Obsidian's native Setting heading API.
+- Tightened drag type narrowing and Markdown cover metadata typing.
+
+## 0.1.9
 
 Community-release preparation:
 

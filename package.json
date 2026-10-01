@@ -1,6 +1,6 @@
 {
   "name": "obsidian-visual-gallery",
-  "version": "0.1.9",
+  "version": "0.1.10",
   "description": "A visual vault browser with whole-canvas thumbnails for Obsidian.",
   "main": "main.js",
   "type": "module",
@@ -32,6 +32,6 @@
     "vitest": "^3.2.4"
   },
   "dependencies": {
-    "pdfjs-dist": "3.11.174"
+    "pdfjs-dist": "5.4.624"
   }
 }

@@ -1,5 +1,5 @@
 import { PDFWorker } from "pdfjs-dist";
-import workerSource from "pdfjs-dist/build/pdf.worker.min.js";
+import workerSource from "pdfjs-dist/build/pdf.worker.min.mjs";
 
 /** Self-contained: community installations download only the three standard assets. */
 export class BundledPdfWorker {
@@ -11,9 +11,9 @@ export class BundledPdfWorker {
     if (this.worker) return this.worker;
     const url = URL.createObjectURL(new Blob([workerSource], { type: "text/javascript" }));
     try {
-      const port = new Worker(url);
+      const port = new Worker(url, { type: "module" });
       this.port = port;
-      const worker: PDFWorker = PDFWorker.fromPort({ port });
+      const worker = PDFWorker.create({ port });
       this.worker = worker;
       this.url = url;
       return worker;

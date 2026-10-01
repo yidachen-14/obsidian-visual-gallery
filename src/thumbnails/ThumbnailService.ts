@@ -43,7 +43,7 @@ export class ThumbnailService {
 
   private async getMarkdownThumbnail(file: TFile): Promise<GalleryThumbnail> {
     const cache = this.app.metadataCache.getFileCache(file);
-    const coverValue = cache?.frontmatter?.cover;
+    const coverValue: unknown = cache?.frontmatter?.cover;
     const cover = typeof coverValue === "string" ? normalizeLink(coverValue) : null;
     const link = cover || cache?.embeds?.[0]?.link;
     if (link) {

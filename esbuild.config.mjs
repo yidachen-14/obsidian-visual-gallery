@@ -16,7 +16,7 @@ const context = await esbuild.context({
   plugins: [{
     name: "embed-pdf-worker",
     setup(build) {
-      build.onLoad({ filter: /pdf\.worker\.min\.js$/ }, async ({ path }) => ({
+      build.onLoad({ filter: /pdf\.worker\.min\.mjs$/ }, async ({ path }) => ({
         contents: await readFile(path, "utf8"), loader: "text",
       }));
     },
