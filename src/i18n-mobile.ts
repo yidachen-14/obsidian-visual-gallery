@@ -1,0 +1,22 @@
+import type { UiLanguage } from "./languages";
+export const MOBILE_TRANSLATIONS = {
+  en: { open: "Open", select: "Select", clearSelection: "Clear selection", selectAll: "Select all", moveSelection: "Move selected items…", moveHere: "Move here", moveTitle: "Choose destination folder", selectedCount: "{count} selected" },
+  "zh-TW": { open: "開啟", select: "選取", clearSelection: "取消選取", selectAll: "全選", moveSelection: "移動所選項目…", moveHere: "移動到這裡", moveTitle: "選擇目標資料夾", selectedCount: "已選取 {count} 個項目" },
+  "zh-CN": { open: "打开", select: "选择", clearSelection: "取消选择", selectAll: "全选", moveSelection: "移动所选项目…", moveHere: "移动到这里", moveTitle: "选择目标文件夹", selectedCount: "已选择 {count} 个项目" },
+  ja: { open: "開く", select: "選択", clearSelection: "選択を解除", selectAll: "すべて選択", moveSelection: "選択した項目を移動…", moveHere: "ここに移動", moveTitle: "移動先のフォルダーを選択", selectedCount: "{count} 個を選択中" },
+  ko: { open: "열기", select: "선택", clearSelection: "선택 해제", selectAll: "모두 선택", moveSelection: "선택한 항목 이동…", moveHere: "여기로 이동", moveTitle: "대상 폴더 선택", selectedCount: "{count}개 선택됨" },
+  de: { open: "Öffnen", select: "Auswählen", clearSelection: "Auswahl aufheben", selectAll: "Alles auswählen", moveSelection: "Ausgewählte Elemente verschieben…", moveHere: "Hierher verschieben", moveTitle: "Zielordner wählen", selectedCount: "{count} ausgewählt" },
+  es: { open: "Abrir", select: "Seleccionar", clearSelection: "Borrar selección", selectAll: "Seleccionar todo", moveSelection: "Mover elementos seleccionados…", moveHere: "Mover aquí", moveTitle: "Elegir carpeta de destino", selectedCount: "{count} seleccionados" },
+  fr: { open: "Ouvrir", select: "Sélectionner", clearSelection: "Désélectionner", selectAll: "Tout sélectionner", moveSelection: "Déplacer les éléments sélectionnés…", moveHere: "Déplacer ici", moveTitle: "Choisir le dossier de destination", selectedCount: "{count} sélectionnés" },
+  it: { open: "Apri", select: "Seleziona", clearSelection: "Annulla selezione", selectAll: "Seleziona tutto", moveSelection: "Sposta gli elementi selezionati…", moveHere: "Sposta qui", moveTitle: "Scegli la cartella di destinazione", selectedCount: "{count} selezionati" },
+  "pt-BR": { open: "Abrir", select: "Selecionar", clearSelection: "Limpar seleção", selectAll: "Selecionar tudo", moveSelection: "Mover itens selecionados…", moveHere: "Mover para cá", moveTitle: "Escolher pasta de destino", selectedCount: "{count} selecionados" },
+  ru: { open: "Открыть", select: "Выбрать", clearSelection: "Снять выделение", selectAll: "Выбрать всё", moveSelection: "Переместить выбранные элементы…", moveHere: "Переместить сюда", moveTitle: "Выберите папку назначения", selectedCount: "Выбрано: {count}" },
+  uk: { open: "Відкрити", select: "Вибрати", clearSelection: "Зняти виділення", selectAll: "Вибрати все", moveSelection: "Перемістити вибрані елементи…", moveHere: "Перемістити сюди", moveTitle: "Виберіть теку призначення", selectedCount: "Вибрано: {count}" },
+  nl: { open: "Openen", select: "Selecteren", clearSelection: "Selectie wissen", selectAll: "Alles selecteren", moveSelection: "Geselecteerde items verplaatsen…", moveHere: "Hierheen verplaatsen", moveTitle: "Doelmap kiezen", selectedCount: "{count} geselecteerd" },
+  pl: { open: "Otwórz", select: "Zaznacz", clearSelection: "Usuń zaznaczenie", selectAll: "Zaznacz wszystko", moveSelection: "Przenieś zaznaczone elementy…", moveHere: "Przenieś tutaj", moveTitle: "Wybierz folder docelowy", selectedCount: "Zaznaczono: {count}" },
+  tr: { open: "Aç", select: "Seç", clearSelection: "Seçimi temizle", selectAll: "Tümünü seç", moveSelection: "Seçili öğeleri taşı…", moveHere: "Buraya taşı", moveTitle: "Hedef klasörü seç", selectedCount: "{count} seçili" },
+  id: { open: "Buka", select: "Pilih", clearSelection: "Hapus pilihan", selectAll: "Pilih semua", moveSelection: "Pindahkan item terpilih…", moveHere: "Pindahkan ke sini", moveTitle: "Pilih folder tujuan", selectedCount: "{count} dipilih" },
+  vi: { open: "Mở", select: "Chọn", clearSelection: "Bỏ chọn", selectAll: "Chọn tất cả", moveSelection: "Di chuyển các mục đã chọn…", moveHere: "Di chuyển đến đây", moveTitle: "Chọn thư mục đích", selectedCount: "Đã chọn {count} mục" },
+  th: { open: "เปิด", select: "เลือก", clearSelection: "ยกเลิกการเลือก", selectAll: "เลือกทั้งหมด", moveSelection: "ย้ายรายการที่เลือก…", moveHere: "ย้ายมาที่นี่", moveTitle: "เลือกโฟลเดอร์ปลายทาง", selectedCount: "เลือกแล้ว {count} รายการ" },
+} satisfies Record<UiLanguage, Record<string, string>>;
+export type MobileTranslationKey = keyof typeof MOBILE_TRANSLATIONS.en;

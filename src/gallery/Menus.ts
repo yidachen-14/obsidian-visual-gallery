@@ -38,3 +38,18 @@ export function creationMenu(language: UiLanguage, create: (kind: NewItemKind) =
   menu.addItem(item => item.setTitle(translate(language, "newFolder")).setIcon("folder-plus").onClick(() => create("folder")));
   return menu;
 }
+
+export function mobileCardMenu(language: UiLanguage, count: number, actions: {
+  open: () => void; selectAll: () => void; clear: () => void; move: () => void;
+  rename: (() => void) | null; remove: () => void;
+}): Menu {
+  const menu = new Menu();
+  menu.addItem(item => item.setTitle(translate(language, "open")).setIcon("file").onClick(actions.open));
+  menu.addItem(item => item.setTitle(translate(language, "selectAll")).setIcon("check-check").onClick(actions.selectAll));
+  menu.addItem(item => item.setTitle(translate(language, "clearSelection")).setIcon("x").onClick(actions.clear));
+  menu.addItem(item => item.setTitle(translate(language, "moveSelection")).setIcon("folder-input").setDisabled(count === 0).onClick(actions.move));
+  if (actions.rename) menu.addItem(item => item.setTitle(translate(language, "rename")).setIcon("pencil").onClick(actions.rename!));
+  menu.addSeparator();
+  menu.addItem(item => item.setTitle(translate(language, "delete")).setIcon("trash-2").setWarning(true).onClick(actions.remove));
+  return menu;
+}

@@ -13,10 +13,11 @@ export function galleryHeaderWidth(available: number, rowWidth: number, titleWid
 }
 
 /** Keep all actual buttons visible before truncating the folder title. */
-export function galleryToolbarSizing(available: number, count = 3): { buttonSize: number; gap: number; width: number } {
+export function galleryToolbarSizing(available: number, count = 3, touch = false): { buttonSize: number; gap: number; width: number } {
   if (count <= 0) return { buttonSize: 28, gap: 4, width: 0 };
-  const gap = available >= 42 + count * 28 + (count - 1) * 4 ? 4 : 2;
-  const buttonSize = Math.floor(Math.min(28, Math.max(18, (available - 42 - (count - 1) * gap) / count)) * 64) / 64;
+  const maximum = touch ? 44 : 28, minimum = touch ? 32 : 18;
+  const gap = available >= 42 + count * maximum + (count - 1) * 4 ? 4 : 2;
+  const buttonSize = Math.floor(Math.min(maximum, Math.max(minimum, (available - 42 - (count - 1) * gap) / count)) * 64) / 64;
   return { buttonSize, gap, width: count * buttonSize + (count - 1) * gap };
 }
 
@@ -37,7 +38,7 @@ export function syncGalleryLayout(shell: HTMLElement, layout: HTMLElement, grid:
   const result = galleryRowLayout(available, cardWidth, gap, count, shell.ownerDocument.defaultView!.matchMedia("(max-width: 720px)").matches);
   const header = layout.querySelector<HTMLElement>(".visual-gallery-header");
   const controls = layout.querySelector<HTMLElement>(".visual-gallery-controls");
-  const toolbar = galleryToolbarSizing(available, controls?.querySelectorAll(".visual-gallery-toolbar-button").length ?? 0);
+  const toolbar = galleryToolbarSizing(available, controls?.querySelectorAll(".visual-gallery-toolbar-button").length ?? 0, !!shell.closest(".visual-gallery-mobile"));
   layout.style.setProperty("--vg-toolbar-button-size", toolbar.buttonSize + "px");
   layout.style.setProperty("--vg-toolbar-gap", toolbar.gap + "px");
   if (controls) controls.style.width = toolbar.width + "px";

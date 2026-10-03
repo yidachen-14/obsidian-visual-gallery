@@ -4,6 +4,8 @@
  * See THIRD_PARTY_NOTICES.md for the complete notice.
  */
 import { App, normalizePath, TFile } from "obsidian";
+import { decodeImage, type DecodedImage } from "../utils/decodeImage";
+import { thumbnailBlob } from "../utils/thumbnailBlob";
 import { computeBounds, computeRenderDimensions, getAnchorPoint } from "./CanvasGeometry";
 import { parseJsonCanvas } from "./CanvasParser";
 import type {
@@ -264,7 +266,7 @@ export class CanvasRenderer {
       dependencies: state.dependencies,
     };
     const rendered = await this.renderData(data, canvasFile.path, childState);
-    const bitmap = await createImageBitmap(rendered.blob);
+    const bitmap = await decodeImage(rendered.blob);
     try {
       this.drawBitmap(context, node, bitmap, "contain");
     } finally {
@@ -380,7 +382,7 @@ export class CanvasRenderer {
   private drawBitmap(
     context: CanvasRenderingContext2D,
     node: Pick<JsonCanvasNode, "x" | "y" | "width" | "height">,
-    bitmap: ImageBitmap,
+    bitmap: DecodedImage,
     fit: "cover" | "contain",
   ): void {
     const imageWidth = Math.max(1, bitmap.width);
@@ -396,7 +398,7 @@ export class CanvasRenderer {
     context.fillStyle = "#ffffff";
     context.fillRect(node.x, node.y, node.width, node.height);
     context.drawImage(
-      bitmap,
+      bitmap.source,
       node.x + (node.width - width) / 2,
       node.y + (node.height - height) / 2,
       width,
@@ -440,32 +442,10 @@ export class CanvasRenderer {
     return IMAGE_EXTENSIONS.has(file.extension.toLowerCase());
   }
 
-  private async loadBitmap(file: TFile): Promise<ImageBitmap> {
+  private async loadBitmap(file: TFile): Promise<DecodedImage> {
     const bytes = await this.app.vault.readBinary(file);
     const blob = new Blob([bytes], { type: imageMimeType(file.extension) });
-    try {
-      return await createImageBitmap(blob);
-    } catch (error) {
-      // Chromium does not consistently decode SVG blobs through
-      // createImageBitmap(), even though the same SVG renders in Obsidian.
-      // Decode through an HTMLImageElement first, then copy it to a bitmap so
-      // callers retain the same closeable ImageBitmap lifecycle.
-      if (file.extension.toLowerCase() !== "svg") throw error;
-      return this.loadSvgBitmap(blob);
-    }
-  }
-
-  private async loadSvgBitmap(blob: Blob): Promise<ImageBitmap> {
-    const objectUrl = URL.createObjectURL(blob);
-    try {
-      const image = new Image();
-      image.decoding = "async";
-      image.src = objectUrl;
-      await image.decode();
-      return await createImageBitmap(image);
-    } finally {
-      URL.revokeObjectURL(objectUrl);
-    }
+    return decodeImage(blob);
   }
 
   private drawEdgeLabel(context: CanvasRenderingContext2D, label: string, x: number, y: number): void {
@@ -543,13 +523,7 @@ export class CanvasRenderer {
   }
 
   private toBlob(canvas: HTMLCanvasElement): Promise<Blob> {
-    return new Promise((resolve, reject) => {
-      canvas.toBlob(
-        (blob) => blob ? resolve(blob) : reject(new Error("Browser could not encode the Canvas thumbnail.")),
-        "image/webp",
-        this.options.quality,
-      );
-    });
+    return thumbnailBlob(canvas, this.options.quality);
   }
 }
 

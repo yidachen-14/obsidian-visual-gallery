@@ -1,4 +1,4 @@
-import { FileSystemAdapter, TFolder, normalizePath, type App, type TAbstractFile } from "obsidian";
+import { FileSystemAdapter, Platform, TFolder, normalizePath, type App, type TAbstractFile } from "obsidian";
 import { isValidItemName } from "./Rename";
 
 export type NewItemKind = "note" | "canvas" | "folder";
@@ -38,14 +38,14 @@ export async function createGalleryItem(app: App, folder: TFolder, name: string,
 export interface RevealShell { showItemInFolder(path: string): void; }
 
 export function canRevealItem(app: App): boolean {
-  return app.vault.adapter instanceof FileSystemAdapter;
+  return !Platform.isMobile && typeof FileSystemAdapter === "function" && app.vault.adapter instanceof FileSystemAdapter;
 }
 
 export function revealGalleryItem(app: App, item: TAbstractFile, injectedShell?: RevealShell): void {
   requireCurrentItem(app, item);
-  if (!(app.vault.adapter instanceof FileSystemAdapter)) throw new Error("Not a local desktop vault");
+  if (!canRevealItem(app)) throw new Error("Not a local desktop vault");
   const electron = injectedShell ? null : require("electron") as { shell?: RevealShell; remote?: { shell?: RevealShell } };
   const shell = injectedShell ?? electron?.shell ?? electron?.remote?.shell;
   if (!shell?.showItemInFolder) throw new Error("System file manager is unavailable");
-  shell.showItemInFolder(app.vault.adapter.getFullPath(item.path));
+  shell.showItemInFolder((app.vault.adapter as FileSystemAdapter).getFullPath(item.path));
 }

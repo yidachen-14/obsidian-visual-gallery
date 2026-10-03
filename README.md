@@ -1,6 +1,6 @@
 # Visual Gallery
 
-Browse your Obsidian vault as a visual card gallery, with thumbnails of the **whole Canvas**, not just its first image. Visual Gallery is an independent, desktop-only community plugin.
+Browse your Obsidian vault as a visual card gallery, with thumbnails of the **whole Canvas**, not just its first image. Visual Gallery is an independent community plugin, with desktop and mobile interaction paths starting in 0.1.19.
 
 ## Features
 
@@ -9,6 +9,7 @@ Browse your Obsidian vault as a visual card gallery, with thumbnails of the **wh
 - Image previews and locally rendered PDF first-page thumbnails.
 - Folder cards, breadcrumbs, file-type filters and Obsidian-style sorting by name, modification time or creation time in either direction.
 - Single-click to select; double-click to open. Command/Ctrl-click toggles individual cards, Shift-click selects a range, and dragging blank space selects a rectangle. Escape or a blank-space click clears selection.
+- On mobile, tap to open and long-press to enter selection mode and show actions. Tap more cards to toggle selection, then long-press a selected card and choose **Move selected items…**. Choose a destination folder and confirm **Move here**. Scroll and pinch gestures do not start selection. Tap blank space or choose **Clear selection** to exit selection mode.
 - Drag files and folders to gallery folders, breadcrumbs or the native file explorer. Dragging an unselected card works immediately; dragging a selected card moves the selection.
 - Right-click a card to rename it, delete it or reveal its original file in Finder/system file manager. Right-click blank space to create a note, Canvas or folder, in that order.
 - Right-click a folder or supported file in the native file explorer and choose **Show in Visual Gallery**. Folders open their contents; files open their parent gallery and become selected, even if the previous gallery filter hid them.
@@ -33,6 +34,8 @@ PDF rendering is included in `main.js`; no separate worker, external service or 
 Click the gallery ribbon icon, or run **Visual Gallery: Open Visual Gallery** in the command palette. The gallery opens in the active note's folder. Use breadcrumbs to navigate, the file-type filter to narrow the cards, and the sort menu to reorder files. Folders remain first and sorted A–Z, like the native file explorer.
 
 For multiple selections, use Command on macOS or Ctrl on Windows/Linux. Command/Ctrl+A selects currently displayed filtered cards. Shift-click and Shift+arrow keys extend a range. Drag from blank gallery space to select files and folders together.
+
+On iPhone, iPad and Android, use the touch selection and destination menu described above instead of desktop HTML drag-and-drop or modifier keys. The mobile card menu omits Finder/system file manager and omits Rename when multiple items are selected. Delete still acts on the pressed item only and uses Obsidian's confirmation/trash preferences. Desktop mouse behavior is unchanged. The header retains exactly Create (+), Sort, Filter, with larger mobile touch targets.
 
 Drag-and-drop and rename act on **original files**, not previews. Moves through gallery targets check name conflicts and invalid folder nesting before starting the batch. If a disk error interrupts a batch, a notice reports how many items moved; already completed moves are not automatically rolled back. Link updates follow Obsidian's preferences. Back up your vault before reorganizing important files.
 
@@ -62,7 +65,7 @@ destination after going back clears the old forward branch.
 
 - No account, payment, ads, telemetry or analytics are required.
 - The plugin makes no network requests, uploads no vault contents and loads no remote thumbnail images. Link nodes show a simplified URL card; remote covers are not fetched.
-- Preview generation reads files within the vault. Settings and generated WebP previews are stored inside the plugin directory, normally `<vault>/.obsidian/plugins/visual-gallery/thumbnail-cache/` (or the vault's custom configuration directory).
+- Preview generation reads files within the vault. Settings and generated WebP (or PNG fallback) previews are stored inside the plugin directory, normally `<vault>/.obsidian/plugins/visual-gallery/thumbnail-cache/` (or the vault's custom configuration directory).
 - Canvas rendering does not modify the source board or notes. Rename, move, create and delete happen only through the corresponding user actions. Automatic cleanup removes this plugin's generated cache entries, never original vault files.
 - **Show in Finder/system file manager** resolves the original vault item's local path and asks the operating system to reveal it. It does not read arbitrary files outside the vault.
 - Any synchronization service you configured for the vault may also synchronize the plugin's cache and settings. Cache files contain visual previews of your notes.
@@ -70,7 +73,11 @@ destination after going back clears the old forward branch.
 
 ## Compatibility and limitations
 
-Desktop Obsidian **1.13.7 or newer** is required. Native UI integration was tested on macOS with Obsidian 1.13.7; Windows/Linux-specific file-manager behavior has not been independently tested. Mobile is not supported.
+Obsidian **1.13.7 or newer** is required. 0.1.19 removes the desktop-only installation restriction and implements iOS/iPadOS/Android touch support. Keep Obsidian and your OS/WebView updated. Native desktop UI integration was previously tested on macOS with Obsidian 1.13.7; Windows/Linux-specific file-manager behavior has not been independently tested.
+
+Mobile validation covers official Obsidian 1.13.8 on Android phone/tablet emulators: plugin enablement, local Canvas/image/PDF thumbnails, native menus, touch selection and batch moves, cache cleanup/rebuilding, offline app restart and portrait/landscape layouts. iPhone/iPad simulator WebKit rendering and touch-logic checks also pass, but use substituted Obsidian APIs and are **not iOS Obsidian E2E**. Physical devices, older OS/WebViews and full iOS Obsidian integration remain unverified; compatibility with every mobile device is not claimed. See [mobile support and verification](docs/MOBILE_019.md).
+
+On mobile, Canvas generation is limited to one concurrent job and a 1024 px maximum dimension, with one nested level, to reduce memory pressure. PDF thumbnails have a 900 px size cap. If ImageBitmap or WebP encoding is unavailable, local HTML image decoding and correctly named PNG caching provide fallbacks. PDF worker startup errors/timeouts show an unavailable preview without hanging the thumbnail queue; no remote worker is fetched. Existing desktop rendering limits remain unchanged.
 
 Canvas previews are a Canvas2D reconstruction, not screenshots of Obsidian's Canvas. Full Markdown layout, remote embeds, custom plugin nodes and theme-specific details are not reproduced exactly. Very wide or tall boards preserve the whole board, so individual nodes may look small.
 

@@ -9,13 +9,14 @@ export const CANVAS_RENDERER_VERSION = "canvas2d-v3-dependencies";
 
 export class CanvasThumbnailProvider {
   private readonly inflight = new Map<string, Promise<ThumbnailResult>>();
-  private readonly queue = new AsyncQueue(2);
+  private readonly queue: AsyncQueue;
 
   constructor(
     private readonly app: App,
     private readonly renderer: CanvasRenderer,
     private readonly cache: ThumbnailCache,
-  ) {}
+    concurrency = 2,
+  ) { this.queue = new AsyncQueue(concurrency); }
 
   async getThumbnail(file: TFile, force = false): Promise<ThumbnailResult> {
     if (file.extension.toLowerCase() !== "canvas") {
@@ -61,7 +62,6 @@ export class CanvasThumbnailProvider {
         return {
           sourcePath: file.path,
           ...cached,
-          mimeType: "image/webp",
           fromCache: true,
           warnings: [],
         };
@@ -88,12 +88,11 @@ export class CanvasThumbnailProvider {
       if (dependency instanceof TFile) dependencies[path] = dependency.stat.mtime;
     }
     if (this.app.vault.getAbstractFileByPath(sourcePath) !== file) throw new Error("Canvas no longer exists.");
-    const stored = await this.cache.put(file, bytes, rendered.width, rendered.height, dependencies);
+    const stored = await this.cache.put(file, bytes, rendered.width, rendered.height, dependencies, rendered.blob.type === "image/png" ? "image/png" : "image/webp");
     await this.cache.flush();
     return {
       sourcePath: file.path,
       ...stored,
-      mimeType: "image/webp",
       fromCache: false,
       warnings: rendered.warnings,
     };

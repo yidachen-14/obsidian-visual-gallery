@@ -1,4 +1,4 @@
-import { Notice, Plugin, TAbstractFile, TFile, normalizePath, setIcon, setTooltip, type Command } from "obsidian";
+import { Notice, Platform, Plugin, TAbstractFile, TFile, normalizePath, setIcon, setTooltip, type Command } from "obsidian";
 import { ThumbnailCache } from "./cache/ThumbnailCache";
 import { CanvasRenderer } from "./canvas/CanvasRenderer";
 import { GALLERY_VIEW_TYPE, GalleryView } from "./gallery/GalleryView";
@@ -36,7 +36,7 @@ export default class VisualGalleryPlugin extends Plugin {
       "pdf",
     );
     await Promise.all([canvasCache.load(), pdfCache.load()]);
-    const canvas = new CanvasThumbnailProvider(this.app, new CanvasRenderer(this.app), canvasCache);
+    const canvas = new CanvasThumbnailProvider(this.app, new CanvasRenderer(this.app, Platform.isMobile ? { maxDimension: 1024, maxNestedDepth: 1 } : {}), canvasCache, Platform.isMobile ? 1 : 2);
     const pdf = new PdfThumbnailProvider(this.app, pdfCache);
     this.thumbnails = new ThumbnailService(this.app, canvas, pdf);
 

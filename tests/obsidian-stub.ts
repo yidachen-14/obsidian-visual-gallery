@@ -1,3 +1,4 @@
+export const Platform = { isMobile: false, isMacOS: true };
 export class TAbstractFile {
   vault!: import("obsidian").Vault;
   path: string;

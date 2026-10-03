@@ -17,6 +17,19 @@ function fixture() {
 }
 
 describe("automatic cache cleanup", () => {
+  it("round-trips PNG fallback and prunes only owned PNG thumbnails", async () => {
+    const { cache, files, adapter } = fixture();
+    const file = { path: "ios.canvas", stat: { mtime: 1 } } as never;
+    const stored = await cache.put(file, new ArrayBuffer(1), 10, 10, {}, "image/png");
+    expect(stored.cachePath).toMatch(/\.png$/); await cache.flush();
+    const fresh = new ThumbnailCache(adapter as never, "plugin", "v1");
+    expect((await fresh.get(file))?.mimeType).toBe("image/png");
+    files.set("plugin/thumbnail-cache/orphan123.png", new ArrayBuffer(1));
+    files.set("original.png", "keep"); await fresh.prune(() => 1);
+    expect(files.has("plugin/thumbnail-cache/orphan123.png")).toBe(false);
+    expect(files.has(stored.cachePath)).toBe(true); await fresh.clear();
+    expect(files.has(stored.cachePath)).toBe(false); expect(files.get("original.png")).toBe("keep");
+  });
   it("reports a failed clear instead of claiming the cache is empty", async () => {
     const { cache, adapter } = fixture();
     await cache.put({ path: "board.canvas", stat: { mtime: 1 } } as never, new ArrayBuffer(1), 10, 10);

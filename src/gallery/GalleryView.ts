@@ -6,7 +6,9 @@ import { RenameModal } from "./RenameModal";
 import { MarqueeSelection } from "./MarqueeSelection";
 import { CreateItemModal } from "./CreateItemModal";
 import { canRevealItem, deleteGalleryItem, revealGalleryItem, type NewItemKind } from "./ItemActions";
-import { cardMenu, creationMenu, filterMenu, sortMenu } from "./Menus";
+import { cardMenu, creationMenu, filterMenu, sortMenu, mobileCardMenu } from "./Menus";
+import { TouchInteraction } from "./TouchInteraction";
+import { MoveModal } from "./MoveModal";
 import { renderGalleryToolbar } from "./Toolbar";
 import { syncGalleryLayout } from "./Layout";
 import { COVER_COLOR_KEYS } from "../SettingsModel";
@@ -45,6 +47,8 @@ export class GalleryView extends ItemView {
   private dragging = false;
   private moving = false;
   private marquee: MarqueeSelection | null = null;
+  private touch: TouchInteraction | null = null;
+  private touchSelecting = false;
 
   constructor(
     leaf: WorkspaceLeaf,
@@ -89,6 +93,7 @@ export class GalleryView extends ItemView {
     if (this.folderPath !== previousFolder) {
       result.history = true;
       this.selection.clear();
+      this.touchSelecting = false;
       this.contentEl.scrollTop = 0;
     }
     if (this.contentEl.isConnected) this.render();
@@ -96,7 +101,21 @@ export class GalleryView extends ItemView {
 
   protected async onOpen(): Promise<void> {
     this.contentEl.addClass("visual-gallery-view");
+    this.contentEl.toggleClass("visual-gallery-mobile", Platform.isMobile);
     this.contentEl.tabIndex = -1;
+    if (Platform.isMobile) {
+      this.touch = new TouchInteraction(this.contentEl, (card, x, y) => {
+        const item = this.app.vault.getAbstractFileByPath(card.dataset.itemPath ?? "");
+        if (!item || !this.order.includes(item.path)) return;
+        this.touchSelecting = true;
+        if (!this.selection.paths.has(item.path)) this.selection.select(item.path, this.order, { ctrlKey: true });
+        this.updateSelection();
+        this.showCardMenu(item, { x, y });
+      });
+      this.registerDomEvent(this.contentEl, "click", event => {
+        if (event.target instanceof Element && !event.target.closest(".visual-gallery-card,button,input,select,textarea,a,[contenteditable=true],.visual-gallery-header")) this.selectCard(null);
+      });
+    }
     this.marquee = new MarqueeSelection(this.contentEl, () => this.selection.paths, paths => {
       this.selection.clear();
       paths.forEach(path => this.selection.paths.add(path));
@@ -121,6 +140,8 @@ export class GalleryView extends ItemView {
 
   protected async onClose(): Promise<void> {
     this.pendingRevealPath = null;
+    this.touch?.dispose();
+    this.touch = null;
     this.marquee?.dispose();
     this.marquee = null;
     this.renderVersion += 1;
@@ -155,6 +176,7 @@ export class GalleryView extends ItemView {
 
   private render(): void {
     this.marquee?.cancel();
+    this.touch?.reset();
     const version = ++this.renderVersion;
     this.observer?.disconnect();
     this.observer = null;
@@ -191,6 +213,7 @@ export class GalleryView extends ItemView {
     this.order = entries.map(entry => entry.item.path);
     if (this.pendingRevealPath && !this.order.includes(this.pendingRevealPath)) this.pendingRevealPath = null;
     this.selection.retain(this.order);
+    if (!this.selection.paths.size) this.touchSelecting = false;
     if (entries.length === 0) {
       grid.createDiv({ cls: "visual-gallery-empty", text: translate(language, "noMatches") });
       return;
@@ -254,6 +277,7 @@ export class GalleryView extends ItemView {
       this.observer?.observe(card);
     }
     this.scrollToRevealedItem();
+    if (Platform.isMobile) this.updateSelection();
     if (end < entries.length) {
       window.setTimeout(() => this.renderChunk(entries, grid, end, version), 0);
     }
@@ -261,7 +285,7 @@ export class GalleryView extends ItemView {
 
   private createCard(grid: HTMLElement, entry: GalleryEntry, index: number): HTMLElement {
     const card = grid.createEl("button", { cls: "visual-gallery-card" });
-    card.draggable = true;
+    card.draggable = !Platform.isMobile;
     card.dataset.entryIndex = String(index);
     card.dataset.itemPath = entry.item.path;
     card.toggleClass("is-selected", this.selection.paths.has(entry.item.path));
@@ -289,15 +313,23 @@ export class GalleryView extends ItemView {
     }
     card.addEventListener("click", (event) => {
       event.stopPropagation();
+      if (Platform.isMobile && !event.metaKey && !event.ctrlKey && !event.shiftKey) {
+        if (!this.touchSelecting) { this.openEntry(entry); return; }
+        this.selection.select(entry.item.path, this.order, { ctrlKey: true });
+        if (this.selection.paths.size === 0) this.touchSelecting = false;
+        this.updateSelection();
+        return;
+      }
       this.selection.select(entry.item.path, this.order, event);
       this.updateSelection();
     });
     card.addEventListener("dblclick", (event) => {
       event.preventDefault();
       event.stopPropagation();
-      this.openEntry(entry);
+      if (!Platform.isMobile) this.openEntry(entry);
     });
     card.addEventListener("dragstart", (event) => {
+      if (Platform.isMobile) { event.preventDefault(); return; }
       if (!this.selection.paths.has(entry.item.path)) this.selectCard(entry.item.path);
       if (!startCardDrag(this.app, event, this.selectedItems())) {
         event.preventDefault();
@@ -316,17 +348,7 @@ export class GalleryView extends ItemView {
     card.addEventListener("contextmenu", event => {
       event.preventDefault();
       event.stopPropagation();
-      if (!this.selection.paths.has(entry.item.path)) this.selectCard(entry.item.path);
-      const language = this.getSettings().language;
-      cardMenu(language, Platform.isMacOS, canRevealItem(this.app),
-        this.selection.paths.size === 1 ? () => new RenameModal(this.app, entry.item, language).open() : null,
-        () => void deleteGalleryItem(this.app, entry.item).then(deleted => {
-          if (deleted) { this.selection.paths.delete(entry.item.path); this.scheduleRefresh(); }
-        }).catch(error => { console.error("[Visual Gallery] Delete failed", error); new Notice(translate(language, "deleteFailed")); }),
-        () => {
-          try { revealGalleryItem(this.app, entry.item); }
-          catch (error) { console.error("[Visual Gallery] Reveal failed", error); new Notice(translate(language, "revealFailed")); }
-        }).showAtMouseEvent(event);
+      this.showCardMenu(entry.item, { x: event.clientX, y: event.clientY });
     });
     if (entry.item instanceof TFolder) this.registerFolderDrop(card, entry.item);
     return card;
@@ -442,11 +464,13 @@ export class GalleryView extends ItemView {
   }
 
   private openEntry(entry: GalleryEntry): void {
+    if (this.app.vault.getAbstractFileByPath(entry.item.path) !== entry.item) return;
     if (entry.item instanceof TFolder) void this.navigateTo(entry.item);
     else void this.app.workspace.getLeaf(false).openFile(entry.item);
   }
 
   private selectCard(path: string | null): void {
+    if (!path) this.touchSelecting = false;
     this.pendingRevealPath = null;
     this.selection.clear();
     if (path) this.selection.select(path, this.order);
@@ -464,12 +488,71 @@ export class GalleryView extends ItemView {
       card.toggleClass("is-selected", selected);
       card.setAttr("aria-pressed", String(selected));
     }
+    if (Platform.isMobile) {
+      const folder = this.resolveFolder();
+      this.contentEl.querySelector<HTMLElement>(".visual-gallery-count")?.setText(this.touchSelecting
+        ? translate(this.getSettings().language, "selectedCount", { count: this.selection.paths.size })
+        : translate(this.getSettings().language, "itemCount", { count: folder.children.length }));
+    }
+  }
+
+  private showCardMenu(item: TAbstractFile, position: { x: number; y: number }): void {
+    if (this.app.vault.getAbstractFileByPath(item.path) !== item) return;
+    if (!this.selection.paths.has(item.path)) this.selectCard(item.path);
+    if (Platform.isMobile) { this.touchSelecting = true; this.updateSelection(); }
+    const language = this.getSettings().language;
+    const rename = this.selection.paths.size === 1 ? () => new RenameModal(this.app, item, language).open() : null;
+    const remove = () => void deleteGalleryItem(this.app, item).then(deleted => {
+      if (deleted) { this.selection.paths.delete(item.path); this.scheduleRefresh(); }
+    }).catch(error => { console.error("[Visual Gallery] Delete failed", error); new Notice(translate(language, "deleteFailed")); });
+    const menu = Platform.isMobile ? mobileCardMenu(language, this.selection.paths.size, {
+      open: () => { this.selectCard(null); if (item instanceof TFolder) void this.navigateTo(item); else if (item instanceof TFile) void this.app.workspace.getLeaf(false).openFile(item); },
+      selectAll: () => { this.touchSelecting = true; this.order.forEach(path => this.selection.paths.add(path)); this.updateSelection(); },
+      clear: () => this.selectCard(null), move: () => this.chooseMoveFolder(), rename, remove,
+    }) : cardMenu(language, Platform.isMacOS, canRevealItem(this.app), rename, remove, () => {
+      try { revealGalleryItem(this.app, item); }
+      catch (error) { console.error("[Visual Gallery] Reveal failed", error); new Notice(translate(language, "revealFailed")); }
+    });
+    menu.showAtPosition(position, this.contentEl.ownerDocument);
+  }
+
+  private chooseMoveFolder(): void {
+    const items = this.selectedItems();
+    if (!items.length || this.moving) return;
+    const current = (folder: TFolder) => (folder.isRoot() ? this.app.vault.getRoot() : this.app.vault.getAbstractFileByPath(folder.path)) === folder
+      && items.every(item => this.app.vault.getAbstractFileByPath(item.path) === item);
+    const plan = (folder: TFolder) => planCardMoves(items, folder, path => !!this.app.vault.getAbstractFileByPath(path));
+    new MoveModal(this.app, this.getSettings().language, folder => {
+      const result = plan(folder);
+      return !this.moving && current(folder) && !result.error && result.moves.length > 0;
+    }, async folder => {
+      if (this.moving || !current(folder)) return false;
+      const result = plan(folder);
+      if (result.error || !result.moves.length) return false;
+      this.moving = true;
+      let moved = 0;
+      try {
+        for (const move of result.moves) {
+          if (!current(folder) || this.app.vault.getAbstractFileByPath(move.path)) throw new Error("Destination changed");
+          await this.app.fileManager.renameFile(move.item, move.path);
+          moved++;
+        }
+        this.selectCard(null);
+        new Notice(translate(this.getSettings().language, "movedCount", { count: moved, folder: folder.isRoot() ? this.app.vault.getName() : folder.path }));
+        return true;
+      } catch (error) {
+        console.error("[Visual Gallery] Touch batch move stopped", error);
+        new Notice(translate(this.getSettings().language, "partialMove", { count: moved, total: result.moves.length }));
+        return false;
+      } finally { this.moving = false; this.scheduleRefresh(); }
+    }).open();
   }
 
   private onKeyDown(event: KeyboardEvent): void {
     if (!(event.target instanceof HTMLElement) || event.target.closest("input,select,textarea,[contenteditable=true]")) return;
     if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "a") {
       event.preventDefault();
+      if (Platform.isMobile) this.touchSelecting = true;
       this.order.forEach(path => this.selection.paths.add(path));
       this.updateSelection();
     } else if (event.key === "Escape") {

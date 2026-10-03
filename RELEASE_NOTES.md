@@ -1,3 +1,33 @@
+# Visual Gallery 0.1.19 — mobile support
+
+- Remove the desktop-only manifest restriction; add shared iOS/iPadOS/Android
+  touch behavior without changing desktop mouse selection or navigation history.
+- Tap opens; long-press selects and opens a native action menu. Tap other cards
+  to toggle selection; Move selected items opens a vault-folder destination
+  modal. Preflight collisions/nesting and revalidate originals before each move.
+  Rename is single-selection-only. Finder is omitted on mobile; Delete remains
+  the pressed-item native deletion flow, never silent batch deletion.
+- Cancel long presses on scroll, pinch, movement, pointer cancellation or view
+  unload. Suppress native duplicate menus and trailing clicks, including holds
+  longer than two seconds. Keep exactly three toolbar icons and use 44 px
+  mobile targets. All new menu strings are translated in all 18 languages.
+- Reduce mobile Canvas concurrency/size/nested depth and PDF thumbnail size.
+  Add HTML image decoding when ImageBitmap is missing and PNG cache fallback
+  when WebP encoding is unavailable; retain original MIME types and clean both.
+- Supply missing PDF Promise/base64/hex APIs in the page and bundled worker.
+  Fail worker startup safely rather than hanging the queue. No remote worker,
+  dependency upgrade, user settings migration or card style changes.
+
+Verification: all 300 automated tests in 21 suites pass. Android phone/tablet
+emulators running official Obsidian 1.13.8 pass plugin enablement, local
+Canvas/image/PDF previews, native menus, multi-selection and batch moves,
+cache cleanup/rebuilding, offline process restart and both orientations.
+iPhone/iPad simulator WebKit checks pass rendering and touch-logic fixtures,
+but use substituted Obsidian APIs and are NOT iOS Obsidian E2E. Physical
+devices, older OS/WebViews and full iOS Obsidian integration remain unverified.
+Existing card styles and desktop interactions are preserved. Requires
+Obsidian 1.13.7 or newer. See docs/MOBILE_019.md for the evidence and limits.
+
 # Visual Gallery 0.1.18
 
 - Route folder cards and breadcrumbs through the existing leaf's public

@@ -24,6 +24,7 @@ export interface CachedThumbnail {
   width: number;
   height: number;
   dependencies: Record<string, number>;
+  mimeType: "image/webp" | "image/png";
 }
 
 export class ThumbnailCache {
@@ -64,7 +65,7 @@ export class ThumbnailCache {
       ) {
         const entries = (parsed as CacheIndex).entries;
         this.index.entries = Object.fromEntries(Object.entries(entries).filter(([, entry]) =>
-          entry && /^[a-z0-9]+\.webp$/.test(entry.fileName) && typeof entry.dependencies !== "string"));
+          entry && /^[a-z0-9]+\.(webp|png)$/.test(entry.fileName) && typeof entry.dependencies !== "string"));
       }
     } catch (error) {
       console.warn("[Visual Gallery] Ignoring an unreadable thumbnail cache index.", error);
@@ -100,6 +101,7 @@ export class ThumbnailCache {
       width: entry.width,
       height: entry.height,
       dependencies: entry.dependencies ?? {},
+      mimeType: entry.fileName.endsWith(".png") ? "image/png" : "image/webp",
     };
   }
 
@@ -109,11 +111,12 @@ export class ThumbnailCache {
     width: number,
     height: number,
     dependencies: Record<string, number> = {},
+    mimeType: "image/webp" | "image/png" = "image/webp",
   ): Promise<CachedThumbnail> {
     await this.load();
     await this.ensureDirectory();
     const cacheKey = this.buildKey(file);
-    const fileName = `${hash64(cacheKey)}.webp`;
+    const fileName = `${hash64(cacheKey)}.${mimeType === "image/png" ? "png" : "webp"}`;
     const cachePath = `${this.cacheDir}/${fileName}`;
     const previous = this.index.entries[file.path];
     this.writingFiles.add(fileName);
@@ -136,7 +139,7 @@ export class ThumbnailCache {
       await this.removeIfPresent(`${this.cacheDir}/${previous.fileName}`);
     }
     this.scheduleSave();
-    return { cachePath, resourceUrl: this.adapter.getResourcePath(cachePath), width, height, dependencies };
+    return { cachePath, resourceUrl: this.adapter.getResourcePath(cachePath), width, height, dependencies, mimeType };
   }
 
   async invalidate(sourcePath: string): Promise<void> {
@@ -198,7 +201,7 @@ export class ThumbnailCache {
     for (const path of files) {
       const name = path.slice(this.cacheDir.length + 1);
       // Only files owned by this cache, never nested folders or source files.
-      if (path.startsWith(`${this.cacheDir}/`) && /^[a-z0-9]+\.webp$/.test(name) &&
+      if (path.startsWith(`${this.cacheDir}/`) && /^[a-z0-9]+\.(webp|png)$/.test(name) &&
         !this.writingFiles.has(name) && !Object.values(this.index.entries).some(entry => entry.fileName === name)) await this.removeIfPresent(path, strict);
     }
   }

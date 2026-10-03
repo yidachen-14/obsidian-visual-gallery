@@ -12,7 +12,7 @@ describe("bundled PDF worker", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mocks.create.mockReturnValue({ destroy: mocks.destroy });
-    vi.stubGlobal("Worker", vi.fn(function () { return { terminate }; }));
+    vi.stubGlobal("Worker", vi.fn(function () { return { terminate, addEventListener: vi.fn() }; }));
     vi.stubGlobal("URL", { createObjectURL: create, revokeObjectURL: revoke });
   });
   afterEach(() => vi.unstubAllGlobals());
@@ -40,5 +40,26 @@ describe("bundled PDF worker", () => {
     expect(() => bundled.get()).toThrow("Worker failure");
     expect(terminate).toHaveBeenCalledTimes(1);
     expect(revoke).toHaveBeenCalledExactlyOnceWith("blob:local-worker");
+  });
+
+  it("times out startup instead of hanging the PDF queue", async () => {
+    vi.useFakeTimers();
+    try {
+      mocks.create.mockReturnValueOnce({ destroy: mocks.destroy, promise: new Promise(() => {}) });
+      const bundled = new BundledPdfWorker();
+      const result = bundled.ready(100);
+      const rejected = expect(result).rejects.toThrow("startup timed out");
+      await vi.advanceTimersByTimeAsync(100); await rejected;
+      expect(terminate).toHaveBeenCalledOnce(); expect(revoke).toHaveBeenCalledOnce();
+    } finally { vi.useRealTimers(); }
+  });
+
+  it("rejects worker error events and releases resources", async () => {
+    let error: () => void = () => {};
+    vi.stubGlobal("Worker", vi.fn(function () { return { terminate, addEventListener: (_type: string, fn: () => void) => { error = fn; } }; }));
+    mocks.create.mockReturnValueOnce({ destroy: mocks.destroy, promise: new Promise(() => {}) });
+    const bundled = new BundledPdfWorker(), ready = bundled.ready();
+    error(); await expect(ready).rejects.toThrow("could not start");
+    expect(terminate).toHaveBeenCalledOnce(); expect(revoke).toHaveBeenCalledOnce();
   });
 });

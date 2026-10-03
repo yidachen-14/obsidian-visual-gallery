@@ -1,9 +1,11 @@
-import { App, TFile } from "obsidian";
+import "./PdfCompatibility";
+import { App, Platform, TFile } from "obsidian";
 import { getDocument } from "pdfjs-dist";
 import { BundledPdfWorker } from "./BundledPdfWorker";
 import { ThumbnailCache } from "../cache/ThumbnailCache";
 import { AsyncQueue } from "../utils/AsyncQueue";
 import type { ThumbnailResult } from "./types";
+import { thumbnailBlob } from "../utils/thumbnailBlob";
 
 const PDF_RENDERER_VERSION = "pdfjs-v3";
 
@@ -65,7 +67,6 @@ export class PdfThumbnailProvider {
         return {
           sourcePath: file.path,
           ...cached,
-          mimeType: "image/webp",
           fromCache: true,
           warnings: [],
         };
@@ -77,7 +78,7 @@ export class PdfThumbnailProvider {
     const data = new Uint8Array(await this.app.vault.readBinary(file));
     const loadingTask = getDocument({
       data,
-      worker: this.worker.get(),
+      worker: await this.worker.ready(),
       useWorkerFetch: false,
       useWasm: false,
       isEvalSupported: false,
@@ -88,7 +89,7 @@ export class PdfThumbnailProvider {
       const document = await loadingTask.promise;
       const page = await document.getPage(1);
       const baseViewport = page.getViewport({ scale: 1 });
-      const scale = Math.min(2, 1200 / Math.max(baseViewport.width, baseViewport.height));
+      const scale = Math.min(2, (Platform.isMobile ? 900 : 1200) / Math.max(baseViewport.width, baseViewport.height));
       const viewport = page.getViewport({ scale });
       const canvas = window.document.createElement("canvas");
       canvas.width = Math.max(1, Math.round(viewport.width));
@@ -98,16 +99,15 @@ export class PdfThumbnailProvider {
       context.fillStyle = "#ffffff";
       context.fillRect(0, 0, canvas.width, canvas.height);
       await page.render({ canvas, viewport }).promise;
-      const blob = await canvasToWebp(canvas);
+      const blob = await thumbnailBlob(canvas);
       if (file.path !== sourcePath || file.stat.mtime !== sourceMtime || this.app.vault.getAbstractFileByPath(sourcePath) !== file) {
         throw new Error("PDF changed while its thumbnail was rendering.");
       }
-      const stored = await this.cache.put(file, await blob.arrayBuffer(), canvas.width, canvas.height);
+      const stored = await this.cache.put(file, await blob.arrayBuffer(), canvas.width, canvas.height, {}, blob.type === "image/png" ? "image/png" : "image/webp");
       await this.cache.flush();
       return {
         sourcePath: file.path,
         ...stored,
-        mimeType: "image/webp",
         fromCache: false,
         warnings: [],
       };
@@ -115,12 +115,4 @@ export class PdfThumbnailProvider {
       await loadingTask.destroy();
     }
   }
-}
-
-function canvasToWebp(canvas: HTMLCanvasElement): Promise<Blob> {
-  return new Promise((resolve, reject) => canvas.toBlob(
-    (blob) => blob ? resolve(blob) : reject(new Error("Browser could not encode the PDF thumbnail.")),
-    "image/webp",
-    0.86,
-  ));
 }
