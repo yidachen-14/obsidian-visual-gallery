@@ -29,6 +29,14 @@ function decorativeIcon(parent: HTMLElement, cls: string, icon: string): HTMLEle
   return element;
 }
 
+/** Reuse the host's file-type badge styling without changing other file types. */
+export function decorateNoteType(file: TFile, row: HTMLElement): void {
+  let badge = row.querySelector<HTMLElement>(".visual-gallery-explorer-note-tag");
+  if (file.extension.toLowerCase() !== "md") { badge?.remove(); return; }
+  badge ??= row.createDiv({ cls: "nav-file-tag visual-gallery-explorer-note-tag" });
+  badge.setText("NOTE");
+}
+
 /** Decorate only this plugin's native tree. Keep the host's disclosure element
  * and listeners intact, so keyboard, virtual rendering and drag/drop still work. */
 export function installExplorerAppearance(
@@ -101,6 +109,7 @@ export function installExplorerAppearance(
     if (disposed) return;
     const counts = folderFileCounts(app.vault.getRoot());
     for (const node of Object.values(view.fileItems)) {
+      if (node.file instanceof TFile) decorateNoteType(node.file, node.selfEl);
       if (!(node.file instanceof TFolder)) continue;
       decorate(node.file);
       const count = node.selfEl.querySelector<HTMLElement>(".visual-gallery-explorer-folder-count");

@@ -1,3 +1,26 @@
+# Visual Gallery 0.1.24 — external file drops and note type badges
+
+- Import files dragged from Finder/system file managers into the gallery's
+  current folder, including blank/empty areas and non-folder cards. Folder cards
+  and breadcrumbs target their own folder; nested targets import only once.
+- Reuse Obsidian's native attachment importer for files, directories and safe
+  collision naming. Copy external contents without changing the originals.
+  Serialize batches, capture drag data during drop, validate destinations, and
+  retain native event propagation and internal file-move behavior.
+- Show NOTE at the right of Markdown rows in the dedicated sidebar, using the
+  same native file-type badge styling as Canvas. Follow create/type-changing
+  rename without duplicate badges; other file types and the original Files tab
+  retain their existing display.
+
+Validation: 357 Visual Gallery tests (532 in the full workspace). Real macOS
+Obsidian 1.14.4 with trusted Chromium external-file drag input covers multiple
+files, binary integrity, unchanged originals, directory import, name collisions,
+folder-card descendants, note cards and breadcrumbs. Existing pointer/keyboard,
+menus, favorites and folder-disclosure checks pass; native drag ghost cleanup
+and all 648 card geometry cases pass. No card DOM or CSS changes. Physical
+Finder gestures and mobile external drops were not exercised.
+See docs/EXPLORER_024.md and docs/DEVELOPMENT_HANDOFF.md.
+
 # Visual Gallery 0.1.23 — separate folder navigation and disclosure
 
 - Clicking a folder row selects it and navigates the existing gallery without

@@ -1,5 +1,6 @@
 import { ItemView, Notice, Platform, TAbstractFile, TFile, TFolder, type ViewStateResult, type WorkspaceLeaf } from "obsidian";
 import { renderGalleryIcon } from "./Icons";
+import { ExternalFileDrop } from "./ExternalDrop";
 import { draggedItems, planCardMoves, startCardDrag } from "./CardDrag";
 import { CardSelection } from "./Selection";
 import { RenameModal } from "./RenameModal";
@@ -54,6 +55,7 @@ export class GalleryView extends ItemView {
   private pendingLocalScroll: number | null = null;
   private scrollSaveTimer: number | null = null;
   private localScroll = 0;
+  private externalDrop: ExternalFileDrop | null = null;
 
   constructor(
     leaf: WorkspaceLeaf,
@@ -119,6 +121,11 @@ export class GalleryView extends ItemView {
     this.contentEl.addClass("visual-gallery-view");
     this.contentEl.toggleClass("visual-gallery-mobile", Platform.isMobile);
     this.contentEl.tabIndex = -1;
+    this.externalDrop = new ExternalFileDrop(this.app, () => { if (this.contentEl.isConnected) this.scheduleRefresh(); }, error => {
+      console.error("[Visual Gallery] External file import failed", error);
+      new Notice(translate(this.getSettings().language, "createFailed"));
+    });
+    this.register(this.externalDrop.attach(this.contentEl, () => this.resolveFolder()));
     if (this.localBrowsing) this.registerDomEvent(this.contentEl, "scroll", () => {
       if (this.pendingLocalScroll === null && this.contentEl.isConnected && this.contentEl.clientHeight > 0) this.localScroll = this.contentEl.scrollTop;
       if (this.scrollSaveTimer !== null) window.clearTimeout(this.scrollSaveTimer);
@@ -510,6 +517,7 @@ export class GalleryView extends ItemView {
         this.scheduleRefresh();
       });
     });
+    this.externalDrop?.attach(element, () => folder);
   }
 
   private openEntry(entry: GalleryEntry): void {

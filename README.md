@@ -8,10 +8,11 @@ Browse your Obsidian vault as a visual card gallery, with thumbnails of the **wh
 - Markdown covers from `cover` frontmatter or the first embedded local image; readable excerpts for notes without covers.
 - Image previews and locally rendered PDF first-page thumbnails.
 - Folder cards, breadcrumbs, file-type filters and Obsidian-style sorting by name, modification time or creation time in either direction.
-- A dedicated **Visual Gallery files** tab in the left sidebar. Expand/collapse folders, click a folder to locate the gallery, click a file to select it, and double-click a file to open a new tab. It shows every file loaded by Obsidian, including types without gallery cards, and retains the host file explorer's context menus, rename, clipboard and drag/drop operations. Its expansion state is independent of the original Files tab. Closed/open folder icons turn into right/down arrows on hover; recursive file counts appear at the right. The vault-name Home button returns to the top-level gallery. Reopen it with **Open Visual Gallery file browser** in the command palette. Requires the Files core plugin.
+- A dedicated **Visual Gallery files** tab in the left sidebar. Expand/collapse folders, click a folder to locate the gallery, click a file to select it, and double-click a file to open a new tab. It shows every file loaded by Obsidian, including types without gallery cards, and retains the host file explorer's context menus, rename, clipboard and drag/drop operations. Its expansion state is independent of the original Files tab. Markdown rows show NOTE in the same type-badge position as CANVAS. Closed/open folder icons turn into right/down arrows on hover; recursive file counts appear at the right. The vault-name Home button returns to the top-level gallery. Reopen it with **Open Visual Gallery file browser** in the command palette. Requires the Files core plugin.
 - Single-click to select; double-click to open. Command/Ctrl-click toggles individual cards, Shift-click selects a range, and dragging blank space selects a rectangle. Escape or a blank-space click clears selection.
 - On mobile, tap to open and long-press to enter selection mode and show actions. Tap more cards to toggle selection, then long-press a selected card and choose **Move selected items…**. Choose a destination folder and confirm **Move here**. Scroll and pinch gestures do not start selection. Tap blank space or choose **Clear selection** to exit selection mode.
-- Drag files and folders to gallery folders, breadcrumbs or the native file explorer. Dragging an unselected card works immediately; dragging a selected card moves the selection.
+- Drag files from Finder/system file managers into the gallery to copy them into the current folder, or onto folder cards/breadcrumbs to import into that destination. Directories and collision naming use Obsidian’s native importer; originals are preserved.
+- Drag vault files and folders to gallery folders, breadcrumbs or the native file explorer. Dragging an unselected card works immediately; dragging a selected card moves the selection.
 - Right-click a card to rename it, delete it or reveal its original file in Finder/system file manager. Right-click blank space to create a note, Canvas or folder, in that order.
 - Right-click a folder or supported file in the native file explorer and choose **Show in Visual Gallery**. Folders open their contents; files open their parent gallery and become selected, even if the previous gallery filter hid them.
 - 18 interface languages: English, Simplified Chinese, Traditional Chinese, Japanese, Korean, German, Spanish, French, Italian, Brazilian Portuguese, Russian, Ukrainian, Dutch, Polish, Turkish, Indonesian, Vietnamese and Thai. New installations default to English; upgrading preserves your choice.
@@ -133,3 +134,10 @@ See [LICENSE](LICENSE) for this project's license and [THIRD_PARTY_NOTICES.md](T
 Rendering and cache design draw on Embed Canvas, Gallery Navigator, the JSON Canvas specification and the official Obsidian sample plugin, as documented in the notices. This plugin is not an official Obsidian product.
 
 Report problems through [GitHub Issues](https://github.com/yidachen-14/obsidian-visual-gallery/issues), including the plugin version, Obsidian version, operating system and reproduction steps. Do not post private vault contents.
+
+## Continuing development on another computer
+
+Clone this repository and read [the development handoff](docs/DEVELOPMENT_HANDOFF.md).
+It records the released baseline, settled interactions, build commands, native
+verification boundaries and publication steps. Codex conversation history and
+local credentials are separate from this repository.

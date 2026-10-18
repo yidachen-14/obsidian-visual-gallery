@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { TFile, TFolder } from "./obsidian-stub";
-import { folderFileCounts } from "../src/gallery/ExplorerAppearance";
+import { decorateNoteType, folderFileCounts } from "../src/gallery/ExplorerAppearance";
 
 describe("explorer folder totals", () => {
   it("counts all nested files, including unsupported files, but no folders", () => {
@@ -56,5 +56,25 @@ describe("explorer appearance isolation", () => {
     expect(source).toContain("view.attachDropHandler?.(app.vault.getRoot(), home)");
     expect(source).toContain('view.registerEvent(app.vault.on("rename", schedule))');
     expect(source).toContain("window.clearTimeout(timer)");
+  });
+});
+
+
+describe("native note type badge", () => {
+  it("adds exactly one NOTE badge and removes it after a change of type", () => {
+    let badge: { text: string; setText(text: string): void; remove(): void } | null = null;
+    const row = {
+      querySelector: () => badge,
+      createDiv: ({ cls }: { cls: string }) => {
+        expect(cls).toBe("nav-file-tag visual-gallery-explorer-note-tag");
+        badge = { text: "", setText(text) { this.text = text; }, remove() { badge = null; } }; return badge;
+      },
+    } as unknown as HTMLElement;
+    decorateNoteType(new TFile("Note.md"), row);
+    expect(badge).toMatchObject({ text: "NOTE" });
+    const first = badge;
+    decorateNoteType(new TFile("Note.MD"), row); expect(badge).toBe(first);
+    decorateNoteType(new TFile("Board.canvas"), row); expect(badge).toBeNull();
+    decorateNoteType(new TFile("File.zip"), row); expect(badge).toBeNull();
   });
 });
