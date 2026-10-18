@@ -1,0 +1,43 @@
+name: Prepare verified 0.1.24 release assets
+on:
+  push:
+    paths: [.github/workflows/release-0124-upload.yml]
+permissions:
+  contents: write
+jobs:
+  prepare:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: 53c9311ec05a7368ef1922aa6935c626abf2b2f8
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.12.1
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm run build
+      - name: Verify tested runtime bytes
+        run: |
+          sha256sum --check <<'SUMS'
+          2205a44e4ef1fd8de193e3f4077bf700c48464abddd55b61f27842881dc989d2  main.js
+          fab7ea3de0439957b68e5f69f25397769b9ca5775d8274c1a6195bd86abcf5e4  manifest.json
+          f0b64ced16ed5cd678038826cef1c633c9caa33610e2a996152dd4a326ea2bb1  styles.css
+          SUMS
+      - name: Upload only to unpublished draft
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          releaseDraft=$(gh api "repos/$GH_REPO/releases/416537610" --jq '.draft')
+          test "$releaseDraft" = true
+          gh api "repos/$GH_REPO/releases/416537610" --method PATCH -f tag_name=0.1.24 -f target_commitish=53c9311ec05a7368ef1922aa6935c626abf2b2f8 --silent
+          gh api "repos/$GH_REPO/releases/416537610/assets" --jq '.[] | select(.name == "main.js" or .name == "manifest.json" or .name == "styles.css") | .id' > "$RUNNER_TEMP/vg-draft-assets.txt"
+          while read -r assetId; do
+            gh api "repos/$GH_REPO/releases/assets/$assetId" --method DELETE --silent
+          done < "$RUNNER_TEMP/vg-draft-assets.txt"
+          gh release upload 0.1.24 main.js manifest.json styles.css --repo "$GH_REPO"
+          gh api "repos/$GH_REPO/releases/416537610" --jq '{id,tag_name,draft,target_commitish,assets:[.assets[]|{name,size,digest,state}]}'
