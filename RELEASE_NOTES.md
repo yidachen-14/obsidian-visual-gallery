@@ -1,3 +1,78 @@
+# Visual Gallery 0.1.22 — pinned folders and device-local browsing
+
+- Pin/unpin folders from the native file-tree context menu. Shortcuts appear
+  below Home, open the existing gallery, retain native folder menus/drop targets,
+  and provide a keyboard-accessible unpin button and collapsible section.
+- Follow folder/ancestor rename and move; remove explicitly deleted folders.
+  Retain unavailable shortcuts during incomplete sync rather than deleting them.
+- Merge shared settings per field and favorites per stable entry, including
+  unpin tombstones. Transport the union in data.json for plugin-settings sync;
+  keep a local replica and per-device snapshots for recovery from stale writes.
+  Serialize updates, reread before writes, poll for changes, and avoid echo loops.
+- Keep the current folder/filter/sort/scroll, card width, native tree preferences,
+  independent folds, tree scrolling and favorites collapse on this device.
+  Ignore foreign workspace destinations while preserving native gallery history.
+- Preserve existing language, custom gradients and icons on migration. Translate
+  the added controls in all 18 languages. Card DOM and existing CSS are unchanged.
+
+Validation: 347 Visual Gallery tests (522 in the full workspace), including
+simulated offline two-device merging and data.json-only transport. Actual macOS
+Obsidian 1.14.4 covers native menus, shortcuts, localization, missing/renamed/
+deleted folders, local-only writes, plugin reload and full process restart.
+Trusted renderer pointer/keyboard checks pass; drag manager cleanup passes
+including favorite-label descendants; card geometry passes all 648 cases.
+No live cloud-account or physical multi-device sync was exercised. New sidebar
+features have not been tested in Android/iOS Obsidian. See docs/EXPLORER_022.md.
+
+# Visual Gallery 0.1.21 — folder icons and vault home
+
+- Add a vault-name Home button above the dedicated sidebar tree. Click or
+  press Enter/Space to return the existing gallery to the vault root, retaining
+  native Back/Forward history. Native root context/drop handlers are reused.
+- Show closed/open folder artwork at rest. Hovering the row replaces the
+  artwork with a right/down chevron in the same native disclosure hit area.
+  Keep native collapse persistence, selection, menus and drag/drop behavior.
+- Show recursive file totals, including unsupported types; update after
+  create/delete/move/rename. Count the tree once per coalesced structural
+  update, without reading file contents, and cancel pending work on unload.
+- Scope all added CSS to the dedicated sidebar. Invalidate native virtual-tree
+  metrics after decoration/theme changes to keep siblings and counts aligned.
+  The original Files tab and gallery card DOM/CSS remain unchanged.
+
+Validation: 332 Visual Gallery tests pass (507 in the full workspace). Real
+macOS Obsidian 1.14.4 tests cover icons and hover arrows, home click/keyboard
+and history, dynamic counts, renamed folders, native menus/file operations,
+retained file selection/double-click, and 180/250/360 px sidebar widths.
+Native card geometry: 648 cases, zero failures. Light/dark captures include
+both folder states at rest and on hover. New mobile sidebar appearance has
+not been tested in Android/iOS Obsidian. See docs/EXPLORER_021.md.
+
+# Visual Gallery 0.1.20 — dedicated sidebar file browser
+
+- Add a Visual Gallery file browser tab to the left sidebar. A folder label
+  selects/navigates the existing gallery; disclosure arrows expand/collapse.
+  A file click selects it, Command/Ctrl-click toggles selection, Shift-click
+  selects a range, and double-click or Enter opens it in a new tab.
+- Reuse a separate native Files view instance, retaining its menus and third-party
+  menu extensions, creation, inline rename, duplicate, confirmed deletion,
+  clipboard, sorting and drag/drop. Show every file loaded by Obsidian without
+  changing the original Files tab's unsupported-file preference or fold state.
+- Persist independent expansion state. Reuse the sidebar when reopening,
+  defer startup creation until host view restoration finishes, and queue
+  rapid folder clicks so the final destination is retained. Keep native
+  gallery Back/Forward history. Translate new labels in all 18 languages.
+- Preserve card DOM/CSS, outlines, cover gradients and the three-button gallery
+  toolbar. The sidebar requires the Obsidian Files core plugin; its private
+  native-view adapter is capability-checked and isolated in one module.
+
+Validation: production build and all 327 Visual Gallery tests pass (502 tests
+in the full workspace). Real macOS Obsidian 1.14.4 integration covers native
+menus and file operations, folder navigation/history, drag/drop/ghost cleanup,
+trusted renderer pointer input, plugin reload and process restart. The 648-case
+native card geometry matrix has zero failures; light/dark screenshots were
+inspected. This sidebar addition has not been retested in mobile Obsidian.
+See docs/EXPLORER_020.md for evidence and compatibility boundaries.
+
 # Visual Gallery 0.1.19 — mobile support
 
 - Remove the desktop-only manifest restriction; add shared iOS/iPadOS/Android

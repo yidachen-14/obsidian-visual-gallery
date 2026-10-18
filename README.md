@@ -8,6 +8,7 @@ Browse your Obsidian vault as a visual card gallery, with thumbnails of the **wh
 - Markdown covers from `cover` frontmatter or the first embedded local image; readable excerpts for notes without covers.
 - Image previews and locally rendered PDF first-page thumbnails.
 - Folder cards, breadcrumbs, file-type filters and Obsidian-style sorting by name, modification time or creation time in either direction.
+- A dedicated **Visual Gallery files** tab in the left sidebar. Expand/collapse folders, click a folder to locate the gallery, click a file to select it, and double-click a file to open a new tab. It shows every file loaded by Obsidian, including types without gallery cards, and retains the host file explorer's context menus, rename, clipboard and drag/drop operations. Its expansion state is independent of the original Files tab. Closed/open folder icons turn into right/down arrows on hover; recursive file counts appear at the right. The vault-name Home button returns to the top-level gallery. Reopen it with **Open Visual Gallery file browser** in the command palette. Requires the Files core plugin.
 - Single-click to select; double-click to open. Command/Ctrl-click toggles individual cards, Shift-click selects a range, and dragging blank space selects a rectangle. Escape or a blank-space click clears selection.
 - On mobile, tap to open and long-press to enter selection mode and show actions. Tap more cards to toggle selection, then long-press a selected card and choose **Move selected items…**. Choose a destination folder and confirm **Move here**. Scroll and pinch gestures do not start selection. Tap blank space or choose **Clear selection** to exit selection mode.
 - Drag files and folders to gallery folders, breadcrumbs or the native file explorer. Dragging an unselected card works immediately; dragging a selected card moves the selection.
@@ -16,6 +17,28 @@ Browse your Obsidian vault as a visual card gallery, with thumbnails of the **wh
 - 18 interface languages: English, Simplified Chinese, Traditional Chinese, Japanese, Korean, German, Spanish, French, Italian, Brazilian Portuguese, Russian, Ukrainian, Dutch, Polish, Turkish, Indonesian, Vietnamese and Thai. New installations default to English; upgrading preserves your choice.
 - Adjustable card width, gallery heading, independent folder/note light/dark cover gradients, folder icons and ribbon icons.
 - Local thumbnail caching, lazy generation, progressive rendering and automatic removal of stale or orphaned previews.
+
+## Favorites and device state
+
+Right-click a folder in the file tree and choose **Pin in Visual Gallery**.
+Pinned folders appear below the vault Home button; click a shortcut to locate
+that folder in the existing gallery. Use its unpin button or native folder
+menu to remove it. The pinned section can collapse. Renaming/moving a folder
+updates its shortcut and descendant shortcuts. A folder not yet available on
+this device stays listed as unavailable until it arrives or you unpin it.
+
+Settings and pins merge across devices when your existing vault sync transfers
+this plugin's `data.json`. Enable community-plugin settings sync in that service.
+Visual Gallery does not connect to a sync provider itself. Different preference
+fields merge independently; unpin records prevent old snapshots from restoring
+removed pins. Changes are read on external-settings notifications and a 5-second
+poll. See [state and merge details](docs/EXPLORER_022.md).
+
+The current gallery folder, current filter/sort, scrolling, card width, tree
+expansion and favorite-section collapse are stored locally on each device.
+Browsing does not rewrite shared plugin settings. Existing custom colors,
+icons and language migrate without resetting. Obsidian continues to manage
+its own workspace/pane layout independently.
 
 ## Installation
 
@@ -31,7 +54,7 @@ PDF rendering is included in `main.js`; no separate worker, external service or 
 
 ## Usage
 
-Click the gallery ribbon icon, or run **Visual Gallery: Open Visual Gallery** in the command palette. The gallery opens in the active note's folder. Use breadcrumbs to navigate, the file-type filter to narrow the cards, and the sort menu to reorder files. Folders remain first and sorted A–Z, like the native file explorer.
+Click the gallery ribbon icon, or run **Visual Gallery: Open Visual Gallery** in the command palette. The gallery restores this device's last folder; on a first visit it uses the active note's folder. Use breadcrumbs to navigate, the file-type filter to narrow the cards, and the sort menu to reorder files. Folders remain first and sorted A–Z, like the native file explorer.
 
 For multiple selections, use Command on macOS or Ctrl on Windows/Linux. Command/Ctrl+A selects currently displayed filtered cards. Shift-click and Shift+arrow keys extend a range. Drag from blank gallery space to select files and folders together.
 
