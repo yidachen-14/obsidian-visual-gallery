@@ -115,10 +115,11 @@ export function createGalleryExplorer(
           select(node, event);
           return;
         }
-        // Keep native disclosure/keyboard handling, but a label click navigates
-        // even when the folder was already selected or has no children.
-        click.call(node, event);
-        if (!(event.target as HTMLElement | null)?.closest?.(".collapse-icon")) {
+        const disclosure = (event.target as HTMLElement | null)?.closest?.(".collapse-icon");
+        // Native folder clicks toggle folds. Delegate only disclosure clicks
+        // and keyboard handling; mouse clicks on the row only select/navigate.
+        if (disclosure || "key" in event) click.call(node, event);
+        if (!disclosure) {
           select(node, event);
           void navigate(file).catch(onError);
         }

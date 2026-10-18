@@ -1,3 +1,15 @@
+# Visual Gallery 0.1.23 — separate folder navigation and disclosure
+
+- Clicking a folder row selects it and navigates the existing gallery without
+  expanding or collapsing the folder, including repeated clicks and file counts.
+- Only the disclosure icon toggles the folder with the mouse. Retain native
+  keyboard navigation, modifier selection, menus, pinned folders and file opening.
+
+Validation: 348 Visual Gallery tests (523 in the full workspace). Trusted renderer
+pointer input in macOS Obsidian 1.14.4 verifies labels/counts in both fold states,
+repeated clicks, arrow-only disclosure, empty folders and existing sidebar actions.
+See docs/EXPLORER_023.md. Mobile sidebar interaction has not been exercised.
+
 # Visual Gallery 0.1.22 — pinned folders and device-local browsing
 
 - Pin/unpin folders from the native file-tree context menu. Shortcuts appear

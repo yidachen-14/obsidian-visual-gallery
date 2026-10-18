@@ -10,8 +10,12 @@ function fixture() {
   const note = new TFile("Projects/Note.md", 0, folder), zip = new TFile("Projects/archive.zip", 0, folder);
   const files = new Map<string, TAbstractFile>([folder, note, zip].map(file => [file.path, file]));
   const nodes: Record<string, ReturnType<typeof nodeFor>> = {};
+  const nativeClicks = new Map<TAbstractFile, ReturnType<typeof vi.fn>>();
   function nodeFor(file: TAbstractFile) {
-    return { file, selfEl: {}, shouldDisplay: () => false, onSelfClick: vi.fn() };
+    const node = { file, selfEl: {}, collapsed: true, shouldDisplay: () => false, onSelfClick: vi.fn() };
+    node.onSelfClick = vi.fn(() => { if (file instanceof TFolder) node.collapsed = !node.collapsed; });
+    nativeClicks.set(file, node.onSelfClick);
+    return node;
   }
   const selectedDoms = new Set<ReturnType<typeof nodeFor>>();
   const domEvents: Record<string, (e: unknown) => void> = {};
@@ -44,7 +48,7 @@ function fixture() {
   files.forEach(file => view.onCreate(file));
   const event = (options = {}) => ({ button: 0, defaultPrevented: false, target: { closest: () => null }, ...options } as unknown as MouseEvent);
   const click = (file: TAbstractFile, options = {}) => view.fileItems[file.path]!.onSelfClick(event(options));
-  return { app, leaf, view, native, tree, files, folder, note, zip, navigate, onError, click, event, domEvents, openFile, getLeaf };
+  return { app, leaf, view, native, tree, files, folder, note, zip, navigate, onError, click, event, domEvents, openFile, getLeaf, nativeClicks };
 }
 
 describe("Visual Gallery native file browser adapter", () => {
@@ -73,12 +77,30 @@ describe("Visual Gallery native file browser adapter", () => {
     view.fileItems[note.path]!.onSelfClick(event({ key: "Enter" }) as unknown as KeyboardEvent);
     expect(openFile).toHaveBeenCalledTimes(2);
   });
-  it("keeps native folder disclosure and navigates directly to the clicked folder", () => {
-    const { folder, navigate, click } = fixture();
+  it("selects and navigates folder rows without changing either fold state; only the arrow toggles", () => {
+    const { folder, navigate, click, view, tree, nativeClicks } = fixture();
+    const node = view.fileItems[folder.path]!;
     click(folder);
     expect(navigate).toHaveBeenCalledExactlyOnceWith(folder);
+    expect([...tree.selectedDoms]).toEqual([node]);
+    expect(node.collapsed).toBe(true);
+    expect(nativeClicks.get(folder)).not.toHaveBeenCalled();
     click(folder, { target: { closest: (selector: string) => selector === ".collapse-icon" ? {} : null } });
     expect(navigate).toHaveBeenCalledTimes(1);
+    expect(node.collapsed).toBe(false);
+    click(folder); click(folder);
+    expect(navigate).toHaveBeenCalledTimes(3);
+    expect(node.collapsed).toBe(false);
+    expect(nativeClicks.get(folder)).toHaveBeenCalledTimes(1);
+    click(folder, { target: { closest: (selector: string) => selector === ".collapse-icon" ? {} : null } });
+    expect(node.collapsed).toBe(true);
+    expect(navigate).toHaveBeenCalledTimes(3);
+    expect(nativeClicks.get(folder)).toHaveBeenCalledTimes(2);
+  });
+  it("retains native keyboard disclosure", () => {
+    const { folder, click, nativeClicks } = fixture();
+    click(folder, { key: "ArrowRight" });
+    expect(nativeClicks.get(folder)).toHaveBeenCalledTimes(1);
   });
   it("allows modifier selection and native range selection without opening files", () => {
     const { tree, note, zip, folder, click, openFile, navigate } = fixture();
