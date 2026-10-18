@@ -2,6 +2,7 @@ import type { GalleryFilter, GallerySort } from "./browser/VaultBrowser";
 import { validLanguage, type UiLanguage } from "./languages";
 import { EXTRA_TRANSLATIONS } from "./i18n-extra";
 import { MOBILE_TRANSLATIONS, type MobileTranslationKey } from "./i18n-mobile";
+import { EXPLORER_TRANSLATIONS, type ExplorerTranslationKey } from "./i18n-explorer";
 export { LANGUAGE_OPTIONS, UI_LANGUAGES, validLanguage, type UiLanguage } from "./languages";
 
 const EN = {
@@ -275,11 +276,12 @@ export const TRANSLATIONS: Record<UiLanguage, Record<TranslationKey, string>> = 
 
 export function translate(
   language: UiLanguage,
-  key: TranslationKey | MobileTranslationKey,
+  key: TranslationKey | MobileTranslationKey | ExplorerTranslationKey,
   values: Record<string, string | number> = {},
 ): string {
   const locale = validLanguage(language);
-  const template = key in MOBILE_TRANSLATIONS.en
+  const template = key in EXPLORER_TRANSLATIONS.en ? EXPLORER_TRANSLATIONS[locale][key as ExplorerTranslationKey]
+    : key in MOBILE_TRANSLATIONS.en
     ? MOBILE_TRANSLATIONS[locale][key as MobileTranslationKey] : TRANSLATIONS[locale][key as TranslationKey];
   return Object.entries(values).reduce(
     (result, [name, value]) => result.replaceAll(`{${name}}`, String(value)),

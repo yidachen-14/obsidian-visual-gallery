@@ -23,6 +23,7 @@ import {
 } from "../browser/VaultBrowser";
 import { translate, type UiLanguage } from "../i18n";
 import type { VisualGallerySettings } from "../settings";
+import { parseBrowserState, type LocalBrowsing } from "../state/LocalState";
 import type { ThumbnailService } from "../thumbnails/ThumbnailService";
 
 export const GALLERY_VIEW_TYPE = "visual-gallery-view";
@@ -49,11 +50,16 @@ export class GalleryView extends ItemView {
   private marquee: MarqueeSelection | null = null;
   private touch: TouchInteraction | null = null;
   private touchSelecting = false;
+  private stateInitialized = false;
+  private pendingLocalScroll: number | null = null;
+  private scrollSaveTimer: number | null = null;
+  private localScroll = 0;
 
   constructor(
     leaf: WorkspaceLeaf,
     private readonly getThumbnailService: () => ThumbnailService | null,
     private readonly getSettings: () => VisualGallerySettings,
+    private readonly localBrowsing?: LocalBrowsing,
   ) {
     super(leaf);
     this.navigation = true;
@@ -75,10 +81,18 @@ export class GalleryView extends ItemView {
   }
 
   getState(): GalleryViewState {
-    return { folderPath: this.folderPath, filter: this.filter, sort: this.sort };
+    return { folderPath: this.folderPath, filter: this.filter, sort: this.sort, ...(this.localBrowsing ? { deviceId: this.localBrowsing.device, scrollTop: this.pendingLocalScroll ?? this.currentLocalScroll() } : {}) };
   }
 
   async setState(state: unknown, result: ViewStateResult): Promise<void> {
+    if (this.localBrowsing && (!isGalleryViewState(state) || state.deviceId !== this.localBrowsing.device)) {
+      // A synced workspace may contain another device's last page. The local
+      // snapshot wins; explicit navigation always carries this device's ID.
+      const local = this.localBrowsing.read();
+      state = local ?? { folderPath: "", filter: this.getSettings().defaultFilter, sort: this.getSettings().defaultSort };
+    }
+    const restore = this.localBrowsing ? parseBrowserState(state) : null;
+    this.pendingLocalScroll = restore?.scrollTop ?? null;
     const previousFolder = this.folderPath;
     this.pendingRevealPath = null;
     await super.setState(state, result);
@@ -96,6 +110,8 @@ export class GalleryView extends ItemView {
       this.touchSelecting = false;
       this.contentEl.scrollTop = 0;
     }
+    this.stateInitialized = true;
+    this.saveLocalState();
     if (this.contentEl.isConnected) this.render();
   }
 
@@ -103,6 +119,11 @@ export class GalleryView extends ItemView {
     this.contentEl.addClass("visual-gallery-view");
     this.contentEl.toggleClass("visual-gallery-mobile", Platform.isMobile);
     this.contentEl.tabIndex = -1;
+    if (this.localBrowsing) this.registerDomEvent(this.contentEl, "scroll", () => {
+      if (this.pendingLocalScroll === null && this.contentEl.isConnected && this.contentEl.clientHeight > 0) this.localScroll = this.contentEl.scrollTop;
+      if (this.scrollSaveTimer !== null) window.clearTimeout(this.scrollSaveTimer);
+      this.scrollSaveTimer = window.setTimeout(() => { this.scrollSaveTimer = null; this.saveLocalState(); }, 150);
+    });
     if (Platform.isMobile) {
       this.touch = new TouchInteraction(this.contentEl, (card, x, y) => {
         const item = this.app.vault.getAbstractFileByPath(card.dataset.itemPath ?? "");
@@ -139,6 +160,8 @@ export class GalleryView extends ItemView {
   }
 
   protected async onClose(): Promise<void> {
+    this.saveLocalState();
+    if (this.scrollSaveTimer !== null) window.clearTimeout(this.scrollSaveTimer);
     this.pendingRevealPath = null;
     this.touch?.dispose();
     this.touch = null;
@@ -160,8 +183,10 @@ export class GalleryView extends ItemView {
   revealItem(path: string): void {
     if (!this.order.includes(path)) return;
     this.selectCard(path);
+    this.pendingLocalScroll = null;
     this.pendingRevealPath = path;
     this.scrollToRevealedItem();
+    this.restoreLocalScroll();
   }
 
   private scrollToRevealedItem(): void {
@@ -174,7 +199,29 @@ export class GalleryView extends ItemView {
     card.focus({ preventScroll: true });
   }
 
+  private currentLocalScroll(): number {
+    // Track real scroll events. During plugin unload the host removes styles
+    // before taking a view snapshot, temporarily collapsing a live page to 0.
+    return this.localScroll;
+  }
+
+  private saveLocalState(): void {
+    if (!this.stateInitialized || !this.localBrowsing) return;
+    this.localScroll = this.pendingLocalScroll ?? this.currentLocalScroll();
+    this.localBrowsing.save({ folderPath: this.folderPath, filter: this.filter, sort: this.sort, scrollTop: this.localScroll });
+  }
+
+  private restoreLocalScroll(): void {
+    if (this.pendingLocalScroll === null || this.contentEl.clientHeight <= 0) return;
+    this.contentEl.scrollTop = this.pendingLocalScroll;
+    this.localScroll = this.contentEl.scrollTop;
+    // Wait for progressive chunks before clamping a remembered long page.
+    if (this.contentEl.scrollHeight >= this.pendingLocalScroll + this.contentEl.clientHeight || this.contentEl.querySelectorAll(".visual-gallery-card").length >= this.order.length) this.pendingLocalScroll = null;
+  }
+
   private render(): void {
+    if (this.localBrowsing && this.pendingLocalScroll === null) this.pendingLocalScroll = this.currentLocalScroll();
+    this.saveLocalState();
     this.marquee?.cancel();
     this.touch?.reset();
     const version = ++this.renderVersion;
@@ -208,7 +255,7 @@ export class GalleryView extends ItemView {
     const entries = listGalleryEntries(folder, this.filter, this.sort);
     const syncLayout = () => syncGalleryLayout(shell, layout, grid, entries.length, settings.cardWidth);
     syncLayout();
-    this.layoutObserver = new ResizeObserver(syncLayout);
+    this.layoutObserver = new ResizeObserver(() => { syncLayout(); this.restoreLocalScroll(); });
     this.layoutObserver.observe(shell);
     this.order = entries.map(entry => entry.item.path);
     if (this.pendingRevealPath && !this.order.includes(this.pendingRevealPath)) this.pendingRevealPath = null;
@@ -216,6 +263,7 @@ export class GalleryView extends ItemView {
     if (!this.selection.paths.size) this.touchSelecting = false;
     if (entries.length === 0) {
       grid.createDiv({ cls: "visual-gallery-empty", text: translate(language, "noMatches") });
+      this.restoreLocalScroll();
       return;
     }
 
@@ -276,6 +324,7 @@ export class GalleryView extends ItemView {
       const card = this.createCard(grid, entry, index);
       this.observer?.observe(card);
     }
+    this.restoreLocalScroll();
     this.scrollToRevealedItem();
     if (Platform.isMobile) this.updateSelection();
     if (end < entries.length) {
@@ -400,7 +449,7 @@ export class GalleryView extends ItemView {
     await this.leaf.setViewState({
       type: GALLERY_VIEW_TYPE,
       active: true,
-      state: { ...this.getState(), folderPath: folder.path },
+      state: { ...this.getState(), folderPath: folder.path, ...(this.localBrowsing ? { scrollTop: 0 } : {}) },
     });
   }
 

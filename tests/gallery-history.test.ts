@@ -21,7 +21,7 @@ import { GALLERY_VIEW_TYPE, GalleryView } from "../src/gallery/GalleryView";
 type TestView = {
   navigateTo: (folder: TFolder) => Promise<void>;
 };
-function fixture() {
+function fixture(local?: import("../src/state/LocalState").LocalBrowsing) {
   const root = new TFolder(""), a = new TFolder("A", root), nested = new TFolder("A/Nested", a), b = new TFolder("B", root);
   const files = new Map<string, TAbstractFile>([a, nested, b].map(folder => [folder.path, folder]));
   const app = { vault: { getRoot: () => root, getAbstractFileByPath: (path: string) => files.get(path) } } as unknown as App;
@@ -36,7 +36,7 @@ function fixture() {
     if (result.history && !next.popstate) { back.push(previous); forward.length = 0; }
   });
   const leaf = { app, setViewState: apply } as unknown as WorkspaceLeaf;
-  view = new GalleryView(leaf, () => null, () => ({ ...DEFAULT_SETTINGS }));
+  view = new GalleryView(leaf, () => null, () => ({ ...DEFAULT_SETTINGS }), local);
   const navigate = (folder: TFolder) => (view as unknown as TestView).navigateTo(folder);
   const go = async (direction: -1 | 1) => {
     const source = direction === -1 ? back : forward, destination = direction === -1 ? forward : back;
@@ -125,4 +125,39 @@ describe("gallery uses the host leaf navigation history", () => {
       expect(f.view.getState()).toEqual({ folderPath: "A", filter: "all", sort: "modified" });
     }
   });
+});
+
+
+describe("device-local gallery restoration", () => {
+  it("restores this device instead of a foreign workspace, keeping native history navigable", async () => {
+    let saved = { folderPath: "A", filter: "pdf" as const, sort: "name" as const, scrollTop: 80 };
+    const save = vi.fn();
+    const f = fixture({ device: "this-device", read: () => saved, save });
+    await f.view.setState({ folderPath: "B", filter: "all", deviceId: "other-device" }, { history: false });
+    expect(f.view.getState()).toMatchObject({ folderPath: "A", filter: "pdf", deviceId: "this-device" });
+    expect(save).toHaveBeenLastCalledWith(saved);
+    await f.navigate(f.b);
+    expect(f.apply.mock.calls.at(-1)?.[0].state).toMatchObject({ folderPath: "B", deviceId: "this-device", scrollTop: 0 });
+    expect(f.view.getState().folderPath).toBe("B");
+    await f.go(-1);
+    expect(f.view.getState()).toMatchObject({ folderPath: "A", filter: "pdf" });
+  });
+  it("recovers a missing local folder to root and accepts same-device history", async () => {
+    const save = vi.fn();
+    const f = fixture({ device: "here", read: () => ({ folderPath: "gone", filter: "all", sort: "name", scrollTop: 0 }), save });
+    await f.view.setState({ folderPath: "B" }, { history: false });
+    expect(f.view.getState().folderPath).toBe("");
+    await f.view.setState({ folderPath: "A", filter: "pdf", deviceId: "here" }, { history: false });
+    expect(f.view.getState()).toMatchObject({ folderPath: "A", filter: "pdf" });
+  });
+});
+
+
+it("retains the last scroll offset when the host removes styles before its snapshot", async () => {
+  const f = fixture({ device: "here", read: () => null, save: vi.fn() });
+  await f.view.setState({ folderPath: "A", filter: "all", deviceId: "here" }, { history: false });
+  const internal = f.view as unknown as { localScroll: number; pendingLocalScroll: number | null };
+  internal.localScroll = 420; internal.pendingLocalScroll = null;
+  f.view.contentEl.scrollTop = 0;
+  expect(f.view.getState().scrollTop).toBe(420);
 });
