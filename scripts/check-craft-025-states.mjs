@@ -40,15 +40,15 @@ try{
  await send('Emulation.setDeviceMetricsOverride',{width:1380,height:960,deviceScaleFactor:1,mobile:false});
  await evaluate(`(async()=>{await app.plugins.disablePlugin('visual-gallery');await app.plugins.enablePlugin('visual-gallery');await new Promise(r=>setTimeout(r,100));await app.plugins.plugins['visual-gallery'].openGallery(app.vault.getFolderByPath('Showcase'));})()`);
  // Sorted/filter state and source anchor must survive mode changes on a long page.
- await evaluate(`${view}.sort='name-asc';${view}.filter='all';${view}.changeMode('list',false);void 0`);
+ await evaluate(`${view}.sort='name';${view}.filter='all';${view}.changeMode('list',false);void 0`);
  await wait(`document.querySelectorAll('.visual-gallery-card').length===38`);
- await evaluate(`${view}.pendingLocalScroll=null;${view}.contentEl.scrollTop=1400;void 0`);await frame();
+ await evaluate(`${view}.pendingLocalScroll=null;${view}.pendingAnchor=null;${view}.reflowAnchor=null;${view}.contentEl.scrollTop=1400;${view}.localScroll=1400;void 0`);await frame();
  for(const mode of ['grid','masonry','list']){
   const before=await evaluate(`(()=>{const v=${view};v.pendingLocalScroll=null;return v.captureAnchor();})()`);
   await evaluate(`${view}.changeMode('${mode}',false);void 0`);
   await wait(`document.querySelectorAll('.visual-gallery-card').length===38`);await frame();
   const after=await evaluate(`(()=>{const v=${view},c=[...v.contentEl.querySelectorAll('.visual-gallery-card')].find(c=>c.dataset.itemPath===${JSON.stringify(before?.path)});return {sort:v.sort,filter:v.filter,offset:c.getBoundingClientRect().top-v.contentEl.getBoundingClientRect().top,scroll:v.contentEl.scrollTop};})()`);
-  assert(after.sort==='name-asc'&&after.filter==='all','Sort/filter lost');
+  assert(after.sort==='name'&&after.filter==='all','Sort/filter lost');
   assert(Math.abs(after.offset-before.offset)<3,'Scroll anchor lost: '+JSON.stringify({mode,before,after}));records.push({mode,anchor:true});
  }
  // Capture native hover, selected keyboard focus and native drop-target stroke.
