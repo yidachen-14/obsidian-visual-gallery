@@ -9,6 +9,9 @@ export interface GalleryThumbnail {
   fit: "contain" | "cover";
   textPreview?: string;
   label?: string;
+  markdown?: string;
+  width?: number;
+  height?: number;
 }
 
 export class ThumbnailService {
@@ -18,19 +21,19 @@ export class ThumbnailService {
     readonly pdf: PdfThumbnailProvider,
   ) {}
 
-  async getThumbnail(file: TFile, kind: GalleryFileKind): Promise<GalleryThumbnail> {
+  async getThumbnail(file: TFile, kind: GalleryFileKind, richNotes = false): Promise<GalleryThumbnail> {
     if (kind === "canvas") {
       const result = await this.canvas.getThumbnail(file);
-      return { resourceUrl: result.resourceUrl, fit: "contain" };
+      return { resourceUrl: result.resourceUrl, fit: "contain", width: result.width, height: result.height };
     }
     if (kind === "pdf") {
       const result = await this.pdf.getThumbnail(file);
-      return { resourceUrl: result.resourceUrl, fit: "contain" };
+      return { resourceUrl: result.resourceUrl, fit: "contain", width: result.width, height: result.height };
     }
     if (kind === "images") {
       return { resourceUrl: this.app.vault.getResourcePath(file), fit: "cover" };
     }
-    return this.getMarkdownThumbnail(file);
+    return this.getMarkdownThumbnail(file, richNotes);
   }
 
   async clearCaches(): Promise<void> {
@@ -41,23 +44,25 @@ export class ThumbnailService {
     await Promise.all([this.canvas.flush(), this.pdf.flush()]);
   }
 
-  private async getMarkdownThumbnail(file: TFile): Promise<GalleryThumbnail> {
+  private async getMarkdownThumbnail(file: TFile, richNotes: boolean): Promise<GalleryThumbnail> {
     const cache = this.app.metadataCache.getFileCache(file);
     const coverValue: unknown = cache?.frontmatter?.cover;
     const cover = typeof coverValue === "string" ? normalizeLink(coverValue) : null;
-    const link = cover || cache?.embeds?.[0]?.link;
+    const link = cover || (richNotes ? null : cache?.embeds?.[0]?.link);
+    const raw = richNotes ? (await this.app.vault.cachedRead(file)).slice(0, 12000) : null;
     if (link) {
       const target = this.app.metadataCache.getFirstLinkpathDest(link, file.path);
       if (target instanceof TFile && isImage(target)) {
-        return { resourceUrl: this.app.vault.getResourcePath(target), fit: "contain" };
+        return { resourceUrl: this.app.vault.getResourcePath(target), fit: "contain", ...(raw !== null ? { textPreview: markdownToPlainText(raw).slice(0, 220) } : {}) };
       }
     }
-    const raw = await this.app.vault.cachedRead(file);
+    const body = raw ?? await this.app.vault.cachedRead(file);
     return {
       resourceUrl: null,
       fit: "contain",
       label: "Note",
-      textPreview: markdownToPlainText(raw).slice(0, 220),
+      textPreview: markdownToPlainText(body).slice(0, 220),
+      ...(richNotes ? { markdown: body } : {}),
     };
   }
 }

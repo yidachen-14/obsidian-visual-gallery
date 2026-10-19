@@ -1,3 +1,4 @@
+import { DisplayPreferences } from "./state/DisplayPreferences";
 import { Notice, Platform, Plugin, TAbstractFile, TFile, normalizePath, setIcon, setTooltip, type Command, TFolder } from "obsidian";
 import { ThumbnailCache } from "./cache/ThumbnailCache";
 import { CanvasRenderer } from "./canvas/CanvasRenderer";
@@ -42,6 +43,10 @@ export default class VisualGalleryPlugin extends Plugin {
     const pluginDirectory = this.manifest.dir
       ?? normalizePath(`${this.app.vault.configDir}/plugins/${this.manifest.id}`);
     const device = localDevice(this.app);
+    const display = new DisplayPreferences(() => this.app.loadLocalStorage("visual-gallery-display"), data => this.app.saveLocalStorage("visual-gallery-display", data));
+    this.registerEvent(this.app.workspace.on("file-open", file => { if (file instanceof TFile) display.record(file.path); }));
+    this.registerEvent(this.app.vault.on("rename", (file, oldPath) => display.rename(oldPath, file.path)));
+    this.registerEvent(this.app.vault.on("delete", file => display.remove(file.path)));
     const width = this.app.loadLocalStorage("visual-gallery-card-width");
     this.gallerySettings.cardWidth = validCardWidth(width ?? saved.cardWidth);
     this.app.saveLocalStorage("visual-gallery-card-width", this.gallerySettings.cardWidth);

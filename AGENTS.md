@@ -26,6 +26,17 @@ and updated real-render evidence. Rectangular bounding boxes alone do not prove
 rounded strokes match. Do not call browser fixtures application E2E evidence.
 Do not overwrite an already published version; increment the patch version.
 
+## Approved Craft display extension — 2026-10-20
+
+The user explicitly approved reproducing Craft's card previews and adding a
+three-segment Masonry / Grid / List icon switch. This supersedes the old
+three-controls-only limit: keep the original Create / Sort / Filter group in
+order, and add the separate display-mode group. Shared selection, menus,
+internal/external drag/drop and native history remain. Folder-specific display
+preferences and last-viewed timestamps stay on-device. Markdown gets bounded
+formatted previews; explicit covers and full Canvas thumbnails remain supported.
+The single clipped surface / outside-stroke geometry contract is unchanged.
+
 ## Settled gallery layout and settings
 
 - Header controls align to the last occupied card column when it can fit the

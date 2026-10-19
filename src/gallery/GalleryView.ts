@@ -1,4 +1,7 @@
 import { ItemView, Notice, Platform, TAbstractFile, TFile, TFolder, type ViewStateResult, type WorkspaceLeaf } from "obsidian";
+import { DisplayPreferences } from "../state/DisplayPreferences";
+import { renderDisplayModes, masonryBoxes, nearestCard, type DisplayMode } from "./DisplayMode";
+import { NotePreviewRenderer } from "./NotePreview";
 import { renderGalleryIcon } from "./Icons";
 import { ExternalFileDrop } from "./ExternalDrop";
 import { draggedItems, planCardMoves, startCardDrag } from "./CardDrag";
@@ -55,6 +58,11 @@ export class GalleryView extends ItemView {
   private pendingLocalScroll: number | null = null;
   private scrollSaveTimer: number | null = null;
   private localScroll = 0;
+  private mode: DisplayMode = "grid";
+  private readonly display: DisplayPreferences;
+  private notePreviews: NotePreviewRenderer | null = null;
+  private pendingAnchor: { path: string; offset: number; focus: boolean } | null = null;
+  private reflowAnchor: { path: string; offset: number; focus: boolean } | null = null;
   private externalDrop: ExternalFileDrop | null = null;
 
   constructor(
@@ -65,6 +73,11 @@ export class GalleryView extends ItemView {
   ) {
     super(leaf);
     this.navigation = true;
+    this.display = new DisplayPreferences(
+      () => typeof this.app.loadLocalStorage === "function" ? this.app.loadLocalStorage("visual-gallery-display") : null,
+      data => { if (typeof this.app.saveLocalStorage === "function") this.app.saveLocalStorage("visual-gallery-display", data); },
+    );
+    this.mode = this.display.folder("").mode;
     const settings = this.getSettings();
     this.filter = settings.defaultFilter;
     this.sort = settings.defaultSort;
@@ -107,6 +120,9 @@ export class GalleryView extends ItemView {
     // Obsidian suppresses recording when restoring a back/forward (popstate).
     this.folderPath = this.resolveFolder().path;
     if (this.folderPath !== previousFolder) {
+      this.mode = this.display.folder(this.folderPath).mode;
+      this.pendingAnchor = null;
+      this.reflowAnchor = null;
       result.history = true;
       this.selection.clear();
       this.touchSelecting = false;
@@ -118,7 +134,8 @@ export class GalleryView extends ItemView {
   }
 
   protected async onOpen(): Promise<void> {
-    this.contentEl.addClass("visual-gallery-view");
+    this.contentEl.addClass("visual-gallery-view", "is-craft");
+    this.notePreviews = new NotePreviewRenderer(this.app);
     this.contentEl.toggleClass("visual-gallery-mobile", Platform.isMobile);
     this.contentEl.tabIndex = -1;
     this.externalDrop = new ExternalFileDrop(this.app, () => { if (this.contentEl.isConnected) this.scheduleRefresh(); }, error => {
@@ -126,6 +143,13 @@ export class GalleryView extends ItemView {
       new Notice(translate(this.getSettings().language, "createFailed"));
     });
     this.register(this.externalDrop.attach(this.contentEl, () => this.resolveFolder()));
+    // Keep the switch anchor through asynchronous preview repacking, until the
+    // user starts another gesture. Programmatic scroll events must not clear it.
+    const releaseAnchor = () => { this.reflowAnchor = null; };
+    this.registerDomEvent(this.contentEl, "wheel", releaseAnchor, { passive: true });
+    this.registerDomEvent(this.contentEl, "pointerdown", releaseAnchor);
+    this.registerDomEvent(this.contentEl, "touchstart", releaseAnchor, { passive: true });
+    this.registerDomEvent(this.contentEl, "keydown", releaseAnchor);
     if (this.localBrowsing) this.registerDomEvent(this.contentEl, "scroll", () => {
       if (this.pendingLocalScroll === null && this.contentEl.isConnected && this.contentEl.clientHeight > 0) this.localScroll = this.contentEl.scrollTop;
       if (this.scrollSaveTimer !== null) window.clearTimeout(this.scrollSaveTimer);
@@ -162,6 +186,12 @@ export class GalleryView extends ItemView {
     this.registerEvent(this.app.vault.on("create", () => this.scheduleRefresh()));
     this.registerEvent(this.app.vault.on("delete", () => this.scheduleRefresh()));
     this.registerEvent(this.app.vault.on("rename", () => this.scheduleRefresh()));
+    this.registerEvent(this.app.workspace.on("file-open", file => {
+      if (!(file instanceof TFile)) return;
+      this.contentEl.querySelectorAll<HTMLElement>(".visual-gallery-last-viewed").forEach(element => {
+        if (element.dataset.path === file.path) element.setText(formatModified(Date.now(), this.getSettings().language));
+      });
+    }));
     this.registerEvent(this.app.vault.on("modify", () => this.scheduleRefresh()));
     this.render();
   }
@@ -170,6 +200,8 @@ export class GalleryView extends ItemView {
     this.saveLocalState();
     if (this.scrollSaveTimer !== null) window.clearTimeout(this.scrollSaveTimer);
     this.pendingRevealPath = null;
+    this.notePreviews?.clear();
+    this.notePreviews = null;
     this.touch?.dispose();
     this.touch = null;
     this.marquee?.dispose();
@@ -191,6 +223,7 @@ export class GalleryView extends ItemView {
     if (!this.order.includes(path)) return;
     this.selectCard(path);
     this.pendingLocalScroll = null;
+    this.reflowAnchor = null;
     this.pendingRevealPath = path;
     this.scrollToRevealedItem();
     this.restoreLocalScroll();
@@ -215,6 +248,7 @@ export class GalleryView extends ItemView {
   private saveLocalState(): void {
     if (!this.stateInitialized || !this.localBrowsing) return;
     this.localScroll = this.pendingLocalScroll ?? this.currentLocalScroll();
+    this.display.save(this.folderPath, this.mode, this.localScroll);
     this.localBrowsing.save({ folderPath: this.folderPath, filter: this.filter, sort: this.sort, scrollTop: this.localScroll });
   }
 
@@ -227,11 +261,13 @@ export class GalleryView extends ItemView {
   }
 
   private render(): void {
-    if (this.localBrowsing && this.pendingLocalScroll === null) this.pendingLocalScroll = this.currentLocalScroll();
+    if (!this.pendingAnchor) this.reflowAnchor = null;
+    if (this.localBrowsing && !this.pendingAnchor && this.pendingLocalScroll === null) this.pendingLocalScroll = this.currentLocalScroll();
     this.saveLocalState();
     this.marquee?.cancel();
     this.touch?.reset();
     const version = ++this.renderVersion;
+    this.notePreviews?.clear();
     this.observer?.disconnect();
     this.observer = null;
     this.layoutObserver?.disconnect();
@@ -258,11 +294,18 @@ export class GalleryView extends ItemView {
     this.renderControls(header, language);
     this.renderBreadcrumbs(layout, folder);
 
+    if (this.mode === "list" && settings.showMetadata) {
+      const columns = layout.createDiv({ cls: "visual-gallery-list-header" });
+      columns.createSpan({ text: translate(language, "fileName") });
+      for (const key of ["lastViewed", "dateModified", "dateCreated"] as const) columns.createSpan({ text: translate(language, key) });
+    }
     const grid = layout.createDiv({ cls: "visual-gallery-grid" });
+    grid.dataset.mode = this.mode;
+    this.contentEl.dataset.mode = this.mode;
     const entries = listGalleryEntries(folder, this.filter, this.sort);
-    const syncLayout = () => syncGalleryLayout(shell, layout, grid, entries.length, settings.cardWidth);
+    const syncLayout = () => { syncGalleryLayout(shell, layout, grid, entries.length, settings.cardWidth, this.mode); this.layoutCards(); };
     syncLayout();
-    this.layoutObserver = new ResizeObserver(() => { syncLayout(); this.restoreLocalScroll(); });
+    this.layoutObserver = new ResizeObserver(() => { const anchor = this.reflowAnchor ?? this.captureAnchor(); syncLayout(); this.applyAnchor(anchor); this.restoreLocalScroll(); });
     this.layoutObserver.observe(shell);
     this.order = entries.map(entry => entry.item.path);
     if (this.pendingRevealPath && !this.order.includes(this.pendingRevealPath)) this.pendingRevealPath = null;
@@ -289,6 +332,7 @@ export class GalleryView extends ItemView {
   }
 
   private renderControls(header: HTMLElement, language: UiLanguage): void {
+    renderDisplayModes(header, language, this.mode, (mode, keyboard) => this.changeMode(mode, keyboard));
     renderGalleryToolbar(header, language, this.filter, this.sort, (action, button) => {
       const menu = action === "sort"
         ? sortMenu(language, this.sort, value => { this.sort = value; this.render(); })
@@ -331,6 +375,8 @@ export class GalleryView extends ItemView {
       const card = this.createCard(grid, entry, index);
       this.observer?.observe(card);
     }
+    this.layoutCards();
+    this.applyAnchor(this.pendingAnchor);
     this.restoreLocalScroll();
     this.scrollToRevealedItem();
     if (Platform.isMobile) this.updateSelection();
@@ -344,6 +390,9 @@ export class GalleryView extends ItemView {
     card.draggable = !Platform.isMobile;
     card.dataset.entryIndex = String(index);
     card.dataset.itemPath = entry.item.path;
+    card.dataset.kind = entry.kind;
+    card.setAttribute("aria-label", entry.item.name);
+    if (entry.kind === "folder") card.addClass("is-folder-card");
     card.toggleClass("is-selected", this.selection.paths.has(entry.item.path));
     card.setAttr("aria-pressed", String(this.selection.paths.has(entry.item.path)));
     const surface = card.createDiv({ cls: "visual-gallery-card-surface" });
@@ -357,6 +406,7 @@ export class GalleryView extends ItemView {
       preview.createDiv({ cls: "visual-gallery-preview-loading" });
     }
     const details = surface.createDiv({ cls: "visual-gallery-card-details" });
+    surface.insertBefore(details, preview);
     details.createDiv({
       cls: "visual-gallery-card-title",
       text: entry.item instanceof TFile ? entry.item.basename : entry.item.name,
@@ -364,8 +414,20 @@ export class GalleryView extends ItemView {
     if (this.getSettings().showMetadata) {
       const metadata = entry.item instanceof TFile
         ? `${kindLabel(this.getSettings().language, entry.kind)} · ${formatModified(entry.item.stat.mtime, this.getSettings().language)}`
-        : kindLabel(this.getSettings().language, "folder");
+        : translate(this.getSettings().language, "folderItems", { count: entry.item instanceof TFolder ? entry.item.children.length : 0 });
       details.createDiv({ cls: "visual-gallery-card-meta", text: metadata });
+    }
+    const summary = details.createDiv({ cls: "visual-gallery-list-summary" });
+    if (entry.item instanceof TFolder) summary.setText(translate(this.getSettings().language, "folderItems", { count: entry.item.children.length }));
+    if (this.mode === "list" && this.getSettings().showMetadata) {
+      const dates = surface.createDiv({ cls: "visual-gallery-list-dates" });
+      const viewed = this.display.viewed(entry.item.path);
+      const last = dates.createSpan({ cls: "visual-gallery-last-viewed", text: viewed ? formatModified(viewed, this.getSettings().language) : "—" });
+      last.dataset.path = entry.item.path;
+      for (const time of entry.item instanceof TFile ? [entry.item.stat.mtime, entry.item.stat.ctime] : [null, null]) {
+        const date = dates.createSpan({ text: time ? formatModified(time, this.getSettings().language) : "—" });
+        if (time) date.title = new Date(time).toLocaleString(this.getSettings().language);
+      }
     }
     card.addEventListener("click", (event) => {
       event.stopPropagation();
@@ -416,9 +478,12 @@ export class GalleryView extends ItemView {
     if (!preview) return;
     try {
       const service = this.getThumbnailService();
-      const thumbnail = service ? await service.getThumbnail(entry.item, entry.kind) : null;
+      const thumbnail = service ? await service.getThumbnail(entry.item, entry.kind, true) : null;
       if (version !== this.renderVersion || !card.isConnected) return;
       preview.empty();
+      const summary = card.querySelector<HTMLElement>(".visual-gallery-list-summary");
+      if (summary && thumbnail?.textPreview) summary.setText(thumbnail.textPreview);
+      if (thumbnail?.width && thumbnail.height) card.dataset.imageRatio = String(thumbnail.height / thumbnail.width);
       if (thumbnail?.resourceUrl) {
         preview.toggleClass("is-contain", thumbnail.fit === "contain");
         preview.toggleClass("is-cover", thumbnail.fit === "cover");
@@ -426,7 +491,22 @@ export class GalleryView extends ItemView {
         image.alt = "";
         image.draggable = false;
         image.loading = "lazy";
+        image.addEventListener("load", () => {
+          if (version !== this.renderVersion || !card.isConnected) return;
+          if (!card.dataset.imageRatio && image.naturalWidth) card.dataset.imageRatio = String(image.naturalHeight / image.naturalWidth);
+          this.refreshCardLayout();
+        }, { once: true });
         image.src = thumbnail.resourceUrl;
+      } else if (thumbnail?.markdown !== undefined && this.notePreviews) {
+        preview.addClass("is-document");
+        const document = preview.createDiv({ cls: "visual-gallery-document markdown-rendered" });
+        await this.notePreviews.render(thumbnail.markdown, document, entry.item.path, () => version === this.renderVersion && card.isConnected);
+        if (version !== this.renderVersion || !card.isConnected) return;
+        card.dataset.noteUnits = String(document.scrollHeight);
+        document.querySelectorAll("img").forEach(image => image.addEventListener("load", () => {
+          if (version !== this.renderVersion || !card.isConnected) return;
+          card.dataset.noteUnits = String(document.scrollHeight); this.refreshCardLayout();
+        }, { once: true }));
       } else if (thumbnail?.textPreview) {
         const note = preview.createDiv({ cls: "visual-gallery-note-preview" });
         note.createDiv({
@@ -440,6 +520,7 @@ export class GalleryView extends ItemView {
           text: entry.kind === "notes" ? "Aa" : kindLabel(this.getSettings().language, entry.kind),
         });
       }
+      this.refreshCardLayout();
     } catch (error) {
       console.error(`[Visual Gallery] Could not load ${entry.item.path}.`, error);
       if (version === this.renderVersion && card.isConnected) {
@@ -624,15 +705,81 @@ export class GalleryView extends ItemView {
       const card = event.target.closest<HTMLElement>(".visual-gallery-card");
       if (!card) return;
       event.preventDefault();
-      const grid = card.parentElement!;
-      const columns = getComputedStyle(grid).gridTemplateColumns.split(" ").length;
-      const step = event.key === "ArrowUp" ? -columns : event.key === "ArrowDown" ? columns : event.key === "ArrowLeft" ? -1 : 1;
-      const index = Math.max(0, Math.min(this.order.length - 1, this.order.indexOf(card.dataset.itemPath ?? "") + step));
+      const cards = Array.from(this.contentEl.querySelectorAll<HTMLElement>(".visual-gallery-card"));
+      const boxes = cards.map(element => { const r = element.getBoundingClientRect(); return { x: r.left, y: r.top, width: r.width, height: r.height }; });
+      const index = nearestCard(boxes, cards.indexOf(card), event.key);
       const path = this.order[index];
       if (!path) return;
       this.selection.select(path, this.order, event);
       this.updateSelection();
       this.contentEl.querySelectorAll<HTMLElement>(".visual-gallery-card")[index]?.focus();
+    }
+  }
+
+  private captureAnchor(): { path: string; offset: number; focus: boolean } | null {
+    if (!this.contentEl.isConnected || this.pendingLocalScroll !== null) return null;
+    const top = this.contentEl.getBoundingClientRect().top;
+    const cards = Array.from(this.contentEl.querySelectorAll<HTMLElement>(".visual-gallery-card"));
+    const visible = cards.filter(card => card.getBoundingClientRect().bottom > top + 8)
+      .sort((a, b) => a.getBoundingClientRect().top - b.getBoundingClientRect().top);
+    const card = visible[0];
+    return card ? { path: card.dataset.itemPath!, offset: card.getBoundingClientRect().top - top, focus: card === card.ownerDocument.activeElement } : null;
+  }
+
+  private applyAnchor(anchor: { path: string; offset: number; focus: boolean } | null): void {
+    if (!anchor) return;
+    const card = Array.from(this.contentEl.querySelectorAll<HTMLElement>(".visual-gallery-card")).find(card => card.dataset.itemPath === anchor.path);
+    if (!card) return;
+    this.contentEl.scrollTop += card.getBoundingClientRect().top - this.contentEl.getBoundingClientRect().top - anchor.offset;
+    this.localScroll = this.contentEl.scrollTop;
+    if (anchor.focus) card.focus({ preventScroll: true });
+    if (anchor === this.pendingAnchor) this.pendingAnchor = null;
+  }
+
+  private changeMode(mode: DisplayMode, keyboard: boolean): void {
+    if (mode === this.mode) return;
+    this.display.save(this.folderPath, this.mode, this.contentEl.scrollTop);
+    this.pendingAnchor = this.captureAnchor();
+    this.reflowAnchor = this.pendingAnchor;
+    this.mode = mode;
+    this.display.save(this.folderPath, mode, this.display.folder(this.folderPath).scroll[mode] ?? 0);
+    this.pendingLocalScroll = this.pendingAnchor ? null : this.display.folder(this.folderPath).scroll[mode] ?? 0;
+    this.render();
+    if (keyboard || !this.pendingAnchor) this.contentEl.querySelector<HTMLButtonElement>(`.visual-gallery-mode-button[data-mode="${mode}"]`)?.focus({ preventScroll: true });
+  }
+
+  private refreshCardLayout(): void {
+    const anchor = this.reflowAnchor ?? this.captureAnchor();
+    this.layoutCards(); this.applyAnchor(anchor);
+  }
+
+  private layoutCards(): void {
+    const grid = this.contentEl.querySelector<HTMLElement>(".visual-gallery-grid");
+    if (!grid) return;
+    const cards = Array.from(grid.querySelectorAll<HTMLElement>(":scope > .visual-gallery-card"));
+    const fluid = grid.parentElement?.classList.contains("is-fluid") ?? false;
+    // clientWidth rounds fractional occupied widths and can lose a whole column.
+    const gridWidth = parseFloat(getComputedStyle(grid).width) || grid.clientWidth;
+    const width = fluid ? gridWidth : Math.min(gridWidth, this.getSettings().cardWidth);
+    const ratios = cards.map(card => {
+      card.style.setProperty("--vg-document-scale", String(Math.max(.1, (width - 32) / 560)));
+      if (card.dataset.kind === "folder") return .65;
+      const titleHeight = card.querySelector<HTMLElement>(".visual-gallery-card-details")?.offsetHeight ?? 64;
+      if (card.dataset.noteUnits) return Math.max(1.15, Math.min(1.9, (titleHeight + Number(card.dataset.noteUnits) * (width - 32) / 560 + 24) / Math.max(1, width)));
+      if (card.dataset.imageRatio) return Math.max(.9, Math.min(1.9, Number(card.dataset.imageRatio) + titleHeight / Math.max(1, width)));
+      return card.dataset.kind === "pdf" ? 1.6 : 1.4;
+    });
+    if (this.mode === "masonry") {
+      const gap = parseFloat(getComputedStyle(grid).columnGap) || 22;
+      const result = masonryBoxes(gridWidth, this.getSettings().cardWidth, gap, ratios, fluid);
+      grid.style.height = result.height + "px";
+      cards.forEach((card, index) => {
+        const box = result.boxes[index]!;
+        Object.assign(card.style, { left: box.x + "px", top: box.y + "px", width: box.width + "px", height: box.height + "px" });
+      });
+    } else {
+      grid.style.removeProperty("height");
+      cards.forEach(card => { card.style.height = this.mode === "list" ? "80px" : width * .8 + "px"; });
     }
   }
 

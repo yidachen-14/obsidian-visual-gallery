@@ -1,3 +1,32 @@
+# Visual Gallery 0.1.25 — Craft-style display modes
+
+- Add a three-segment icon switch in Masonry, Grid, List order before the existing
+  Create, Sort and Filter controls, with translated tooltips and keyboard radio navigation.
+- Grid uses equal-height 5:4 cards. Masonry packs equal-width cards at bounded,
+  content-dependent heights. List shows miniature previews, name/summary and real
+  last-viewed, modified and created dates; narrow panes progressively hide date columns.
+- Place note titles above scaled, formatted Markdown previews with lists, tables,
+  code and local images. Fade long content, preserve explicit covers, cap work and
+  unload preview components when changing folders/modes. Common query fences and
+  note transclusions are excluded; previews do not accept interaction.
+- Keep per-folder display/scroll state and recency on this device. Preserve
+  selection, sort/filter and visible-file anchors through asynchronous preview
+  repacking; maintain native history and all existing file operations.
+- Retain whole-Canvas/image/PDF previews, independent custom gradients, centered
+  folder artwork and the single clipped surface/outside-stroke geometry contract.
+  Use accurate fractional occupied widths so masonry never drops a fitted column.
+
+Validation: production build passes 382 Gallery tests (557 in the mixed workspace).
+Real macOS Obsidian 1.14.4 validates all three modes, formatted notes, selection,
+folder-local persistence after plugin reload, local last-viewed tracking, keyboard
+switching, narrow controls, mid-page anchors, sidebar interactions and external
+file drops in every mode. All 648 legacy plus 1,944 Craft geometry fixture cases
+pass under the actual host CSS. Light/dark normal, selected, hover/focus/drop
+screenshots were inspected. Native drag ghost: 21 gallery + 9 sidebar checks,
+zero freezes/cleanup failures. Input is trusted Chromium renderer input where
+specified; this is not physical Finder/mouse hardware or iOS Obsidian E2E.
+See docs/CRAFT_025.md and docs/DEVELOPMENT_HANDOFF.md.
+
 # Visual Gallery 0.1.24 — external file drops and note type badges
 
 - Import files dragged from Finder/system file managers into the gallery's

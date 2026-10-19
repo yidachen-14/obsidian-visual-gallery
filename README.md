@@ -4,6 +4,10 @@ Browse your Obsidian vault as a visual card gallery, with thumbnails of the **wh
 
 ## Features
 
+- Craft-style **Masonry / Grid / List** views with an icon-only segmented switch before Create, Sort and Filter. Each folder remembers its own view on this device. Switching keeps selection, sorting/filtering and the visible file as a scroll anchor while previews finish loading.
+- Equal-height grid cards with titles above formatted document previews; variable-height masonry with bounded content; compact list rows with miniature previews, summaries and last-viewed/modified/created dates. Date columns disappear as the pane narrows. Last viewed is local history, shown as a dash until recorded.
+- Notes preserve headings, lists, tables, code and local images in a bounded, inert Markdown preview with a fading lower edge. Explicit covers retain priority. Preview work is queued and unloaded when the view changes; note embeds and common query fences are not expanded. Craft is a visual reference; no Craft code or assets are included.
+
 - Whole-Canvas previews: text, groups, connections, local images, Markdown excerpts and nested Canvases.
 - Markdown covers from `cover` frontmatter or the first embedded local image; readable excerpts for notes without covers.
 - Image previews and locally rendered PDF first-page thumbnails.
@@ -35,7 +39,7 @@ fields merge independently; unpin records prevent old snapshots from restoring
 removed pins. Changes are read on external-settings notifications and a 5-second
 poll. See [state and merge details](docs/EXPLORER_022.md).
 
-The current gallery folder, current filter/sort, scrolling, card width, tree
+Per-folder display modes and scroll positions, last-viewed dates, the current gallery folder, current filter/sort, scrolling, card width, tree
 expansion and favorite-section collapse are stored locally on each device.
 Browsing does not rewrite shared plugin settings. Existing custom colors,
 icons and language migrate without resetting. Obsidian continues to manage

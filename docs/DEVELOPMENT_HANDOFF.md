@@ -1,6 +1,6 @@
 # Visual Gallery 開發交接
 
-更新日期：2026-10-18。交接發行基準：**0.1.24**。
+更新日期：2026-10-20。交接發行基準：**0.1.25**。
 
 ## 換一台電腦繼續
 
@@ -19,16 +19,16 @@ pnpm run build
 不需要搬移整個 Codex 歷史資料庫，也不需要複製 node_modules。
 程式碼／文件由 Git 保存；對話、帳戶登入、工具與本機測試環境另行管理。
 日後兩台輪流開發，換機前提交並推送；另一台先檢查本機修改，再拉取遠端更新。
-若 main 已比 0.1.24 新，先讀差異，不要為了本交接檔重設或覆寫後續工作。
+若 main 已比 0.1.25 新，先讀差異，不要為了本交接檔重設或覆寫後續工作。
 
 ## 可貼到新對話的提示
 
 > 請接續開發目前資料夾中的 Visual Gallery Obsidian 外掛。
 > 先讀 AGENTS.md、README.md、RELEASE_NOTES.md 和本交接檔，然後讀
-> docs/EXPLORER_021.md、EXPLORER_022.md、EXPLORER_023.md、EXPLORER_024.md。
+> docs/EXPLORER_021.md、EXPLORER_022.md、EXPLORER_023.md、EXPLORER_024.md、CRAFT_025.md。
 > 先確認 git 狀態、manifest 版本與最新遠端提交，保留既有本機修改。
-> 本交接發行基準為 0.1.24；不要覆寫任何已發布版本。
-> 保留已定稿的互動、卡片、三按鈕工具列與 18 語言，不重設無關外觀。
+> 本交接發行基準為 0.1.25；不要覆寫任何已發布版本。
+> 保留已定稿的三模式、格式化預覽、三段切換與三個動作按鈕、互動及 18 語言，不重設無關外觀。
 > 修改卡片 DOM/CSS 前必須先讀 docs/CARD_GEOMETRY.md 並遵守驗證契約。
 > 先建立可重現問題，在一次性 Obsidian 測試庫驗證修正；不要動正式筆記庫。
 > 請先完成我接下來指定的修改。發布則依當次使用者指示執行。
@@ -50,13 +50,13 @@ pnpm run build
   dragover/drop 可以 preventDefault，但絕不停止傳播，確保原生 ghost 追蹤與清理。
 - 資料夾卡片、麵包屑使用相同 leaf 的公開 setViewState 與原生歷史。沒有自建歷史堆疊，
   不攔截滑鼠側鍵，不在 production 呼叫私有歷史方法。
-- 工具列固定三個純圖示按鈕：新增、排序、篩選。新增的選單順序為筆記、Canvas、資料夾。
+- 工具列為瀑布／網格／列表三段切換，後接三個動作：新增、排序、篩選。新增的選單順序為筆記、Canvas、資料夾。
   卡片是一個裁切表面加一層外側描邊；既有圖示、獨立明暗漸層與選取樣式已有契約。
 
 ## 設定與本機狀態
 
 共享：語言、標題、圖示、顏色、metadata、預設排序／篩選、收藏。
-本機：目前資料夾與當頁排序／篩選、捲動、卡片寬度、側欄偏好、目錄展開／捲動、收藏區收合。
+本機：每資料夾顯示模式、各模式捲動與上次瀏覽、目前資料夾與當頁排序／篩選、捲動、卡片寬度、側欄偏好、目錄展開／捲動、收藏區收合。
 
 data.json 含共享設定與版本化合併狀態；sync-state/<device>.json 是各裝置的共享快照；
 另有 App local storage 副本及本機瀏覽狀態。外掛沒有新增自己的雲端同步服務，仍需
@@ -65,7 +65,9 @@ data.json 含共享設定與版本化合併狀態；sync-state/<device>.json 是
 
 ## 程式位置與相容邊界
 
-- GalleryView.ts：圖庫、原生歷史、卡片事件、目標註冊。
+- GalleryView.ts：圖庫、原生歷史、卡片事件、目標註冊、捲動錨點。
+- DisplayMode.ts：三段切換、瀑布定位與幾何方向鍵。NotePreview.ts：有界格式化預覽與卸載。
+- state/DisplayPreferences.ts：每資料夾模式／捲動與最近瀏覽，只存本機。
 - ExternalDrop.ts：外部拖入。能力檢查後使用 host 的 importAttachments，桌面上按需取
   Electron webUtils 的 File 路徑，目錄由原生 importer 處理；不解析文字／網址為本機路徑。
   同步擷取 drop 資料、保留資料夾物件身分、匯入批次排隊；失敗可恢復後續批次。
@@ -78,8 +80,14 @@ data.json 含共享設定與版本化合併狀態；sync-state/<device>.json 是
 
 ## 測試與證據界線
 
-0.1.24 發行前：公開 Gallery 專案 **357 測試／25 suites** 通過 production build。
-舊電腦混合工作區有 532 測試（含另一個外掛），不要要求單獨 clone 得到該總數。
+0.1.25 新驗證與腳本見 **CRAFT_025.md**：三模式、格式化預覽、本機模式／重載、
+捲動錨點、六按鈕窄面板、三模式外部拖放、明暗所有狀態截圖通過。
+幾何為 648 個既有情境＋1,944 個 Craft 情境，全部零失敗；保留小數尺寸與 zoom 矩陣。
+新的側欄與三模式尚未通過 iOS/Android Obsidian 實機驗證，不能宣稱手機完整 E2E。
+以下為 0.1.24 功能的歷史驗證紀錄；歷史腳本不改寫成新版本證據。
+
+0.1.25：公開 Gallery 專案 **382 測試／26 suites** 通過 production build。
+舊電腦混合工作區有 557 測試（含另一個外掛），不要要求單獨 clone 得到該總數。
 
 真實 macOS Obsidian 1.14.4、一次性庫驗證：
 
@@ -112,7 +120,7 @@ visual-gallery-qa、visual-gallery-drag 或 visual-gallery-explorer- 識別。
 
 ## 再次發布
 
-依當次指示遞增 patch；0.1.24 後通常是 0.1.25，先查遠端避免撞版。
+依當次指示遞增 patch；0.1.25 後通常是 0.1.26，先查遠端避免撞版。
 更新 package.json、manifest.json、versions.json、版本斷言與 RELEASE_NOTES。
 完整 build、必要原生驗證，提交／推送；GitHub CI 必須通過。
 發布精確對應來源的 main.js、manifest.json、styles.css 三檔，核對 SHA256。
