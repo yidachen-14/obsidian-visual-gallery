@@ -47,3 +47,13 @@ For Chromium QA, create one ego-browser task space, then set
 inspect both themes' screenshots. `VG_QA_EXPECT=old` permits expected
 baseline failure to demonstrate the test catches the old CSS. Browser
 fixtures are not a substitute for viewing the real plugin in Obsidian.
+
+## User-approved list exception — 0.1.26
+
+The 2026-10-20 correction explicitly requests divider-based lists rather than
+rounded card baskets. ONLY list mode uses R=0, a transparent ordinary stroke,
+transparent surface/background and a single bottom divider (the row's shadow).
+There is no elevation or normal four-sided frame. Selected/focus/drop rows keep
+one outside state stroke sharing R=0 with the single clipped surface. Grid and
+masonry retain R=14 and all prior assertions. Existing contract tests and the
+original matrix remain intact. New real-host evidence is recorded in CRAFT_026.md.

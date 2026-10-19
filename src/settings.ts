@@ -52,6 +52,12 @@ export class VisualGallerySettingTab extends PluginSettingTab {
         .setDynamicTooltip().onChange(value => void save({ cardWidth: value })));
 
     new Setting(this.containerEl)
+      .setName(t("settingTitleFontSize"))
+      .setDesc(t("settingTitleFontSizeDesc"))
+      .addSlider(slider => slider.setLimits(12, 22, 1).setValue(settings.titleFontSize)
+        .setDynamicTooltip().onChange(value => void save({ titleFontSize: value })));
+
+    new Setting(this.containerEl)
       .setName(t("settingMetadata"))
       .setDesc(t("settingMetadataDesc"))
       .addToggle(toggle => toggle.setValue(settings.showMetadata)

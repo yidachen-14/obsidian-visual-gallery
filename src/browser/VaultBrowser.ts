@@ -2,7 +2,7 @@ import { TFile, TFolder, type TAbstractFile } from "obsidian";
 
 export type GalleryFilter = "all" | "canvas" | "notes" | "images" | "pdf";
 export const GALLERY_FILTERS: GalleryFilter[] = ["all", "canvas", "notes", "images", "pdf"];
-export const GALLERY_SORTS = ["name", "name-desc", "modified", "modified-asc", "created", "created-asc"] as const;
+export const GALLERY_SORTS = ["name", "name-desc", "modified", "modified-asc", "created", "created-asc", "viewed", "viewed-asc"] as const;
 export type GallerySort = typeof GALLERY_SORTS[number];
 
 export function validSort(value: unknown, fallback: GallerySort = "modified"): GallerySort {
@@ -30,6 +30,7 @@ export function listGalleryEntries(
   folder: TFolder,
   filter: GalleryFilter,
   sort: GallerySort,
+  recent: ReadonlyMap<string, number> = new Map(),
 ): GalleryEntry[] {
   const entries: GalleryEntry[] = [];
   for (const child of folder.children) {
@@ -42,7 +43,7 @@ export function listGalleryEntries(
     if (kind && (filter === "all" || filter === kind)) entries.push({ item: child, kind });
   }
 
-  return entries.sort((left, right) => compareEntries(left, right, sort));
+  return entries.sort((left, right) => compareEntries(left, right, sort, recent));
 }
 
 export function getBreadcrumbFolders(folder: TFolder): TFolder[] {
@@ -55,10 +56,17 @@ export function getBreadcrumbFolders(folder: TFolder): TFolder[] {
   return folders;
 }
 
-function compareEntries(left: GalleryEntry, right: GalleryEntry, sort: GallerySort): number {
+function compareEntries(left: GalleryEntry, right: GalleryEntry, sort: GallerySort, recent: ReadonlyMap<string, number>): number {
   if (left.kind === "folder" && right.kind !== "folder") return -1;
   if (left.kind !== "folder" && right.kind === "folder") return 1;
   if (left.item instanceof TFile && right.item instanceof TFile) {
+    if (sort === "viewed" || sort === "viewed-asc") {
+      const a = recent.get(left.item.path), b = recent.get(right.item.path);
+      // Unseen files remain last in both directions; never substitute mtime.
+      if (a === undefined && b !== undefined) return 1;
+      if (a !== undefined && b === undefined) return -1;
+      if (a !== undefined && b !== undefined && a !== b) return sort === "viewed" ? b - a : a - b;
+    }
     const field = sort.startsWith("modified") ? "mtime" : sort.startsWith("created") ? "ctime" : null;
     if (field) {
       const difference = right.item.stat[field] - left.item.stat[field];

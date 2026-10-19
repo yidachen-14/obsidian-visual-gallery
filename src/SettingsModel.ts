@@ -5,6 +5,7 @@ import { validLanguage, type UiLanguage } from "./languages";
 export interface VisualGallerySettings {
   language: UiLanguage;
   cardWidth: number;
+  titleFontSize: number;
   defaultFilter: GalleryFilter;
   defaultSort: GallerySort;
   showMetadata: boolean;
@@ -23,7 +24,7 @@ export interface VisualGallerySettings {
 }
 
 export const DEFAULT_SETTINGS: VisualGallerySettings = {
-  language: "en", cardWidth: 250, defaultFilter: "all", defaultSort: "modified",
+  language: "en", cardWidth: 250, titleFontSize: 14, defaultFilter: "all", defaultSort: "modified",
   showMetadata: true, galleryTitle: "",
   lightStart: "#f7f7f5", lightEnd: "#eeeeeb", darkStart: "#262626", darkEnd: "#222222",
   folderLightStart: "#f7f7f5", folderLightEnd: "#eeeeeb", folderDarkStart: "#262626", folderDarkEnd: "#222222",
@@ -33,6 +34,7 @@ export const DEFAULT_SETTINGS: VisualGallerySettings = {
 export function loadGallerySettings(saved: Partial<VisualGallerySettings> = {}): VisualGallerySettings {
   const settings = { ...DEFAULT_SETTINGS, ...saved };
   settings.language = validLanguage(saved.language);
+  settings.titleFontSize = validTitleFontSize(saved.titleFontSize);
   settings.defaultSort = validSort(saved.defaultSort);
   if (saved.appearanceDefaultsVersion === undefined && saved.darkStart?.toLowerCase() === "#4a4a4a") {
     settings.darkStart = DEFAULT_SETTINGS.darkStart;
@@ -44,6 +46,11 @@ export function loadGallerySettings(saved: Partial<VisualGallerySettings> = {}):
   // independently saved folder values on every subsequent load.
   for (const [folder, note] of COVER_COLOR_PAIRS) settings[folder] = saved[folder] ?? settings[note];
   return settings;
+}
+
+export function validTitleFontSize(value: unknown): number {
+  return typeof value === "number" && Number.isFinite(value)
+    ? Math.max(12, Math.min(22, Math.round(value))) : 14;
 }
 
 export const COVER_COLOR_PAIRS = [

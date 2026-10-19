@@ -14,6 +14,7 @@ import { cardMenu, creationMenu, filterMenu, sortMenu, mobileCardMenu } from "./
 import { TouchInteraction } from "./TouchInteraction";
 import { MoveModal } from "./MoveModal";
 import { renderGalleryToolbar } from "./Toolbar";
+import { renderListHeader } from "./ListHeader";
 import { syncGalleryLayout } from "./Layout";
 import { COVER_COLOR_KEYS } from "../SettingsModel";
 import {
@@ -191,6 +192,7 @@ export class GalleryView extends ItemView {
       this.contentEl.querySelectorAll<HTMLElement>(".visual-gallery-last-viewed").forEach(element => {
         if (element.dataset.path === file.path) element.setText(formatModified(Date.now(), this.getSettings().language));
       });
+      if (this.sort.startsWith("viewed") && this.order.includes(file.path)) this.scheduleRefresh();
     }));
     this.registerEvent(this.app.vault.on("modify", () => this.scheduleRefresh()));
     this.render();
@@ -278,6 +280,7 @@ export class GalleryView extends ItemView {
     this.folderPath = folder.path;
     const settings = this.getSettings();
     const language = settings.language;
+    this.contentEl.style.setProperty("--vg-title-font-size", `${settings.titleFontSize}px`);
     for (const key of COVER_COLOR_KEYS) {
       this.contentEl.style.setProperty(`--vg-${key}`, settings[key]);
     }
@@ -294,15 +297,14 @@ export class GalleryView extends ItemView {
     this.renderControls(header, language);
     this.renderBreadcrumbs(layout, folder);
 
-    if (this.mode === "list" && settings.showMetadata) {
-      const columns = layout.createDiv({ cls: "visual-gallery-list-header" });
-      columns.createSpan({ text: translate(language, "fileName") });
-      for (const key of ["lastViewed", "dateModified", "dateCreated"] as const) columns.createSpan({ text: translate(language, key) });
-    }
+    if (this.mode === "list") renderListHeader(layout, language, this.sort, settings.showMetadata, (sort, column) => {
+      this.sort = sort; this.render();
+      this.contentEl.querySelector<HTMLButtonElement>(`.visual-gallery-column-button[data-column="${column}"]`)?.focus({ preventScroll: true });
+    });
     const grid = layout.createDiv({ cls: "visual-gallery-grid" });
     grid.dataset.mode = this.mode;
     this.contentEl.dataset.mode = this.mode;
-    const entries = listGalleryEntries(folder, this.filter, this.sort);
+    const entries = listGalleryEntries(folder, this.filter, this.sort, this.display.recency());
     const syncLayout = () => { syncGalleryLayout(shell, layout, grid, entries.length, settings.cardWidth, this.mode); this.layoutCards(); };
     syncLayout();
     this.layoutObserver = new ResizeObserver(() => { const anchor = this.reflowAnchor ?? this.captureAnchor(); syncLayout(); this.applyAnchor(anchor); this.restoreLocalScroll(); });
@@ -779,7 +781,7 @@ export class GalleryView extends ItemView {
       });
     } else {
       grid.style.removeProperty("height");
-      cards.forEach(card => { card.style.height = this.mode === "list" ? "80px" : width * .8 + "px"; });
+      cards.forEach(card => { card.style.height = this.mode === "list" ? Math.max(56, this.getSettings().titleFontSize * 1.3 + 30) + "px" : width * .8 + "px"; });
     }
   }
 

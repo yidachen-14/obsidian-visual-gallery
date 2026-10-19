@@ -292,7 +292,8 @@ export function translate(
 }
 
 export function sortLabel(language: UiLanguage, sort: GallerySort): string {
-  const keys: Record<GallerySort, TranslationKey> = {
+  if (sort === "viewed" || sort === "viewed-asc") return translate(language, sort === "viewed" ? "sortViewedDesc" : "sortViewedAsc");
+  const keys: Record<Exclude<GallerySort, "viewed" | "viewed-asc">, TranslationKey> = {
     name: "sortNameAsc", "name-desc": "sortNameDesc", modified: "sortModifiedDesc",
     "modified-asc": "sortModifiedAsc", created: "sortCreatedDesc", "created-asc": "sortCreatedAsc",
   };

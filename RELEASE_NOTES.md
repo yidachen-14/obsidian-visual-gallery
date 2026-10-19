@@ -1,3 +1,29 @@
+# Visual Gallery 0.1.26 — smaller titles, flat lists and sortable columns
+
+- Reduce default card/list titles to 14px and the page heading to 15px. Add a native
+  Title font size slider (12–22px) under Card layout; apply instantly across all
+  three views and preserve it through reload and shared-settings merging.
+- Replace list baskets with flat, compact 56px rows, small previews and horizontal
+  dividers. Remove ordinary rounded frames and elevation; retain clear selection,
+  focus and drop states. Large title sizes can grow rows slightly to avoid clipping.
+- Make Name, Last viewed, Modified and Created headings sortable in both directions.
+  Show the active arrow, translated accessible labels and native keyboard buttons;
+  retain focus, filtering and selection when sorting. Use the same eight choices in
+  the Sort menu. Last viewed reads local file-open history, puts unseen files last,
+  and refreshes recent-first lists after opening a file. Folders stay first, A–Z.
+- Document the user-requested list-only geometry exception. Grid/masonry retain the
+  existing single clipped surface and outside-stroke implementation, custom gradients
+  and whole-Canvas previews. Translate all new settings and sort labels in 18 languages.
+
+Validation: 389 Gallery tests / 27 suites (564 / 43 in the mixed workspace) pass.
+Real macOS Obsidian 1.14.4 validates both directions for all four column buttons,
+real recency refresh, the native settings-popout slider, 12/14/22px in every view,
+reload, selection, narrow panes, metadata, scrolling and file operations. 648 legacy
+plus 5,832 Craft host geometry fixture cases pass; light/dark normal, selected,
+hover/focus/drop corners inspected. List external drops and native ghost/sidebar
+regressions pass. This is desktop integration, not physical mouse/Finder hardware
+or iOS Obsidian E2E. See docs/CRAFT_026.md.
+
 # Visual Gallery 0.1.25 — Craft-style display modes
 
 - Add a three-segment icon switch in Masonry, Grid, List order before the existing

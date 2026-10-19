@@ -15,7 +15,7 @@ afterEach(() => { Platform.isMobile = false; vi.useRealTimers(); vi.unstubAllGlo
 describe("mobile compatibility", () => {
   it("allows mobile installation without rewriting existing released versions", () => {
     const manifest = JSON.parse(readFileSync(new URL("../manifest.json", import.meta.url), "utf8"));
-    expect(manifest).toMatchObject({ version: "0.1.25", isDesktopOnly: false, minAppVersion: "1.13.7" });
+    expect(manifest).toMatchObject({ version: "0.1.26", isDesktopOnly: false, minAppVersion: "1.13.7" });
     const versions = JSON.parse(readFileSync(new URL("../versions.json", import.meta.url), "utf8"));
     expect(versions["0.1.19"]).toBe("1.13.7");
     expect(versions["0.1.20"]).toBe("1.13.7");
@@ -23,6 +23,7 @@ describe("mobile compatibility", () => {
     expect(versions["0.1.22"]).toBe("1.13.7");
     expect(versions["0.1.23"]).toBe("1.13.7");
     expect(versions["0.1.24"]).toBe("1.13.7");
+    expect(versions["0.1.25"]).toBe("1.13.7");
     expect(versions[manifest.version]).toBe(manifest.minAppVersion);
   });
   it.each(UI_LANGUAGES)("has a fully translated mobile menu in %s without Finder or multi-rename", language => {

@@ -6,7 +6,7 @@ import type { NewItemKind } from "./ItemActions";
 export function sortMenu(language: UiLanguage, current: GallerySort, choose: (sort: GallerySort) => void): Menu {
   const menu = new Menu();
   GALLERY_SORTS.forEach((value, index) => {
-    if (index === 2 || index === 4) menu.addSeparator();
+    if (index === 2 || index === 4 || index === 6) menu.addSeparator();
     menu.addItem(item => item.setTitle(sortLabel(language, value)).setChecked(value === current).onClick(() => choose(value)));
   });
   return menu;

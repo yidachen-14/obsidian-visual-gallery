@@ -1,24 +1,24 @@
 import type { UiLanguage } from "./languages";
-const en = { displayMode: "Display mode", viewMasonry: "Masonry", viewGrid: "Grid", viewList: "List", lastViewed: "Last viewed", dateModified: "Modified", dateCreated: "Created", folderItems: "{count} items" };
+const en = { displayMode: "Display mode", viewMasonry: "Masonry", viewGrid: "Grid", viewList: "List", lastViewed: "Last viewed", dateModified: "Modified", dateCreated: "Created", folderItems: "{count} items", settingTitleFontSize: "Title font size", settingTitleFontSizeDesc: "File titles in cards and lists. The page heading scales with this size.", sortViewedDesc: "Last viewed (newest first)", sortViewedAsc: "Last viewed (oldest first)" };
 export type DisplayTranslationKey = keyof typeof en;
-const row = (displayMode: string, viewMasonry: string, viewGrid: string, viewList: string, lastViewed: string, dateModified: string, dateCreated: string, folderItems: string): Record<DisplayTranslationKey, string> => ({ displayMode, viewMasonry, viewGrid, viewList, lastViewed, dateModified, dateCreated, folderItems });
+const row = (displayMode: string, viewMasonry: string, viewGrid: string, viewList: string, lastViewed: string, dateModified: string, dateCreated: string, folderItems: string, settingTitleFontSize: string, settingTitleFontSizeDesc: string, sortViewedDesc: string, sortViewedAsc: string): Record<DisplayTranslationKey, string> => ({ displayMode, viewMasonry, viewGrid, viewList, lastViewed, dateModified, dateCreated, folderItems, settingTitleFontSize, settingTitleFontSizeDesc, sortViewedDesc, sortViewedAsc });
 export const DISPLAY_TRANSLATIONS: Record<UiLanguage, Record<DisplayTranslationKey, string>> = {
   en,
-  "zh-TW": row("顯示方式", "瀑布", "網格", "列表", "上次瀏覽", "更新", "建立", "{count} 個項目"),
-  "zh-CN": row("显示方式", "瀑布", "网格", "列表", "上次浏览", "更新", "创建", "{count} 个项目"),
-  ja: row("表示形式", "メーソンリー", "グリッド", "リスト", "最終閲覧", "更新日", "作成日", "{count} 項目"),
-  ko: row("표시 방식", "벽돌식", "격자", "목록", "최근 열람", "수정일", "생성일", "항목 {count}개"),
-  de: row("Ansicht", "Mauerwerk", "Raster", "Liste", "Zuletzt angesehen", "Geändert", "Erstellt", "{count} Elemente"),
-  es: row("Vista", "Mosaico", "Cuadrícula", "Lista", "Última visita", "Modificado", "Creado", "{count} elementos"),
-  fr: row("Affichage", "Mosaïque", "Grille", "Liste", "Dernière visite", "Modifié", "Créé", "{count} éléments"),
-  it: row("Visualizzazione", "Mosaico", "Griglia", "Elenco", "Ultima visita", "Modificato", "Creato", "{count} elementi"),
-  "pt-BR": row("Visualização", "Mosaico", "Grade", "Lista", "Última visita", "Modificado", "Criado", "{count} itens"),
-  ru: row("Вид", "Мозаика", "Сетка", "Список", "Последний просмотр", "Изменено", "Создано", "Элементов: {count}"),
-  uk: row("Вигляд", "Мозаїка", "Сітка", "Список", "Останній перегляд", "Змінено", "Створено", "Елементів: {count}"),
-  nl: row("Weergave", "Metselwerk", "Raster", "Lijst", "Laatst bekeken", "Gewijzigd", "Aangemaakt", "{count} items"),
-  pl: row("Widok", "Mozaika", "Siatka", "Lista", "Ostatnio oglądane", "Zmieniono", "Utworzono", "Elementy: {count}"),
-  tr: row("Görünüm", "Duvar", "Izgara", "Liste", "Son görüntüleme", "Değiştirilme", "Oluşturulma", "{count} öğe"),
-  id: row("Tampilan", "Susunan bata", "Kisi", "Daftar", "Terakhir dilihat", "Diubah", "Dibuat", "{count} item"),
-  vi: row("Chế độ hiển thị", "Xếp gạch", "Lưới", "Danh sách", "Xem gần nhất", "Sửa đổi", "Tạo", "{count} mục"),
-  th: row("รูปแบบการแสดง", "เรียงอิสระ", "ตาราง", "รายการ", "ดูล่าสุด", "แก้ไข", "สร้าง", "{count} รายการ"),
+  "zh-TW": row("顯示方式", "瀑布", "網格", "列表", "上次瀏覽", "更新", "建立", "{count} 個項目", "標題字級", "調整卡片與列表的檔名標題；頁面標題會等比例縮放。", "上次瀏覽（最近在前）", "上次瀏覽（較早在前）"),
+  "zh-CN": row("显示方式", "瀑布", "网格", "列表", "上次浏览", "更新", "创建", "{count} 个项目", "标题字号", "调整卡片和列表的文件名标题；页面标题会等比例缩放。", "上次浏览（最近在前）", "上次浏览（较早在前）"),
+  ja: row("表示形式", "メーソンリー", "グリッド", "リスト", "最終閲覧", "更新日", "作成日", "{count} 項目", "タイトルの文字サイズ", "カードとリストのファイル名。ページ見出しも連動します。", "最終閲覧（新しい順）", "最終閲覧（古い順）"),
+  ko: row("표시 방식", "벽돌식", "격자", "목록", "최근 열람", "수정일", "생성일", "항목 {count}개", "제목 글자 크기", "카드와 목록의 파일 제목 크기입니다. 페이지 제목도 함께 조절됩니다.", "최근 열람 (최신순)", "최근 열람 (오래된순)"),
+  de: row("Ansicht", "Mauerwerk", "Raster", "Liste", "Zuletzt angesehen", "Geändert", "Erstellt", "{count} Elemente", "Titelgröße", "Dateititel in Karten und Listen. Die Seitenüberschrift wird entsprechend skaliert.", "Zuletzt angesehen (neueste zuerst)", "Zuletzt angesehen (älteste zuerst)"),
+  es: row("Vista", "Mosaico", "Cuadrícula", "Lista", "Última visita", "Modificado", "Creado", "{count} elementos", "Tamaño del título", "Títulos de archivos en tarjetas y listas. El encabezado se ajusta también.", "Última visita (más reciente primero)", "Última visita (más antigua primero)"),
+  fr: row("Affichage", "Mosaïque", "Grille", "Liste", "Dernière visite", "Modifié", "Créé", "{count} éléments", "Taille du titre", "Titres des fichiers dans les cartes et listes. Le titre de page suit ce réglage.", "Dernière visite (plus récente en premier)", "Dernière visite (plus ancienne en premier)"),
+  it: row("Visualizzazione", "Mosaico", "Griglia", "Elenco", "Ultima visita", "Modificato", "Creato", "{count} elementi", "Dimensione del titolo", "Titoli dei file in schede ed elenchi. Anche il titolo della pagina si adatta.", "Ultima visita (più recente prima)", "Ultima visita (meno recente prima)"),
+  "pt-BR": row("Visualização", "Mosaico", "Grade", "Lista", "Última visita", "Modificado", "Criado", "{count} itens", "Tamanho do título", "Títulos dos arquivos em cartões e listas. O título da página acompanha o ajuste.", "Última visita (mais recente primeiro)", "Última visita (mais antiga primeiro)"),
+  ru: row("Вид", "Мозаика", "Сетка", "Список", "Последний просмотр", "Изменено", "Создано", "Элементов: {count}", "Размер заголовка", "Названия файлов в карточках и списках. Заголовок страницы масштабируется вместе с ними.", "Последний просмотр (сначала новые)", "Последний просмотр (сначала старые)"),
+  uk: row("Вигляд", "Мозаїка", "Сітка", "Список", "Останній перегляд", "Змінено", "Створено", "Елементів: {count}", "Розмір заголовка", "Назви файлів у картках і списках. Заголовок сторінки також масштабується.", "Останній перегляд (спочатку нові)", "Останній перегляд (спочатку старі)"),
+  nl: row("Weergave", "Metselwerk", "Raster", "Lijst", "Laatst bekeken", "Gewijzigd", "Aangemaakt", "{count} items", "Titelgrootte", "Bestandstitels in kaarten en lijsten. De paginatitel schaalt mee.", "Laatst bekeken (nieuwste eerst)", "Laatst bekeken (oudste eerst)"),
+  pl: row("Widok", "Mozaika", "Siatka", "Lista", "Ostatnio oglądane", "Zmieniono", "Utworzono", "Elementy: {count}", "Rozmiar tytułu", "Tytuły plików na kartach i listach. Nagłówek strony skaluje się razem z nimi.", "Ostatnio oglądane (najnowsze najpierw)", "Ostatnio oglądane (najstarsze najpierw)"),
+  tr: row("Görünüm", "Duvar", "Izgara", "Liste", "Son görüntüleme", "Değiştirilme", "Oluşturulma", "{count} öğe", "Başlık boyutu", "Kart ve listelerdeki dosya başlıkları. Sayfa başlığı da buna göre ölçeklenir.", "Son görüntüleme (en yeni önce)", "Son görüntüleme (en eski önce)"),
+  id: row("Tampilan", "Susunan bata", "Kisi", "Daftar", "Terakhir dilihat", "Diubah", "Dibuat", "{count} item", "Ukuran judul", "Judul berkas pada kartu dan daftar. Judul halaman ikut menyesuaikan.", "Terakhir dilihat (terbaru dahulu)", "Terakhir dilihat (terlama dahulu)"),
+  vi: row("Chế độ hiển thị", "Xếp gạch", "Lưới", "Danh sách", "Xem gần nhất", "Sửa đổi", "Tạo", "{count} mục", "Cỡ chữ tiêu đề", "Tên tệp trong thẻ và danh sách. Tiêu đề trang cũng thay đổi tương ứng.", "Xem gần nhất (mới nhất trước)", "Xem gần nhất (cũ nhất trước)"),
+  th: row("รูปแบบการแสดง", "เรียงอิสระ", "ตาราง", "รายการ", "ดูล่าสุด", "แก้ไข", "สร้าง", "{count} รายการ", "ขนาดตัวอักษรชื่อ", "ชื่อไฟล์ในการ์ดและรายการ หัวข้อหน้าจะปรับขนาดตามด้วย", "ดูล่าสุด (ใหม่สุดก่อน)", "ดูล่าสุด (เก่าสุดก่อน)"),
 };

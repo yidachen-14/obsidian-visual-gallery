@@ -5,11 +5,11 @@ import { GALLERY_FILTERS, GALLERY_SORTS } from "../src/browser/VaultBrowser";
 import { UI_LANGUAGES, filterLabel, sortLabel, translate } from "../src/i18n";
 
 describe("native gallery menus", () => {
-  it.each(UI_LANGUAGES)("has six grouped sort options and one checkmark in %s", language => {
+  it.each(UI_LANGUAGES)("has eight grouped sort options and one checkmark in %s", language => {
     const choose = vi.fn();
     const menu = sortMenu(language, "created-asc", choose) as unknown as StubMenu;
-    expect(menu.items).toHaveLength(8);
-    expect(menu.items[2]).toBeNull(); expect(menu.items[5]).toBeNull();
+    expect(menu.items).toHaveLength(11);
+    expect(menu.items[2]).toBeNull(); expect(menu.items[5]).toBeNull(); expect(menu.items[8]).toBeNull();
     const options = menu.items.filter((item): item is MenuItem => item !== null);
     expect(options.map(item => item.title)).toEqual(GALLERY_SORTS.map(sort => sortLabel(language, sort)));
     expect(options.filter(item => item.checked)).toHaveLength(1);

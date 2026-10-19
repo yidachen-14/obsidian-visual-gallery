@@ -37,6 +37,16 @@ preferences and last-viewed timestamps stay on-device. Markdown gets bounded
 formatted previews; explicit covers and full Canvas thumbnails remain supported.
 The single clipped surface / outside-stroke geometry contract is unchanged.
 
+## Approved Craft list correction — 2026-10-20
+
+The user explicitly requests smaller adjustable title text, compact list rows,
+flat dividers instead of card baskets, and sortable Name / Last viewed /
+Modified / Created column headings. List mode alone may use radius zero,
+a transparent ordinary outside stroke and a bottom divider without elevation.
+Selection/focus/drop continue through the same single outside stroke layer;
+the one clipped surface remains. Grid/masonry retain the existing geometry.
+Document and verify this scoped exception; do not weaken the original tests.
+
 ## Settled gallery layout and settings
 
 - Header controls align to the last occupied card column when it can fit the

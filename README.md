@@ -4,6 +4,7 @@ Browse your Obsidian vault as a visual card gallery, with thumbnails of the **wh
 
 ## Features
 
+- Adjustable **title font size** (12–22px, default 14px) under Card layout. Compact, flat list rows use horizontal dividers; click Name, Last viewed, Modified or Created to reverse sorting. Last viewed is local history and unseen files remain last.
 - Craft-style **Masonry / Grid / List** views with an icon-only segmented switch before Create, Sort and Filter. Each folder remembers its own view on this device. Switching keeps selection, sorting/filtering and the visible file as a scroll anchor while previews finish loading.
 - Equal-height grid cards with titles above formatted document previews; variable-height masonry with bounded content; compact list rows with miniature previews, summaries and last-viewed/modified/created dates. Date columns disappear as the pane narrows. Last viewed is local history, shown as a dash until recorded.
 - Notes preserve headings, lists, tables, code and local images in a bounded, inert Markdown preview with a fading lower edge. Explicit covers retain priority. Preview work is queued and unloaded when the view changes; note embeds and common query fences are not expanded. Craft is a visual reference; no Craft code or assets are included.

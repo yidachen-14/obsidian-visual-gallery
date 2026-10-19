@@ -27,6 +27,7 @@ export class DisplayPreferences {
     this.write({ ...data, folders: [...folders].slice(-500) });
   }
   viewed(path: string): number | null { return new Map(parse(this.read()).recent).get(path) ?? null; }
+  recency(): ReadonlyMap<string, number> { return new Map(parse(this.read()).recent); }
   record(path: string, time = Date.now()): void {
     const data = parse(this.read()), recent = new Map(data.recent);
     recent.delete(path); recent.set(path, time); this.write({ ...data, recent: [...recent].slice(-2000) });

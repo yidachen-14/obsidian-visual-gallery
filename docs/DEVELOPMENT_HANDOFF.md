@@ -1,6 +1,6 @@
 # Visual Gallery 開發交接
 
-更新日期：2026-10-20。交接發行基準：**0.1.25**。
+更新日期：2026-10-20。交接發行基準：**0.1.26**。
 
 ## 換一台電腦繼續
 
@@ -19,15 +19,15 @@ pnpm run build
 不需要搬移整個 Codex 歷史資料庫，也不需要複製 node_modules。
 程式碼／文件由 Git 保存；對話、帳戶登入、工具與本機測試環境另行管理。
 日後兩台輪流開發，換機前提交並推送；另一台先檢查本機修改，再拉取遠端更新。
-若 main 已比 0.1.25 新，先讀差異，不要為了本交接檔重設或覆寫後續工作。
+若 main 已比 0.1.26 新，先讀差異，不要為了本交接檔重設或覆寫後續工作。
 
 ## 可貼到新對話的提示
 
 > 請接續開發目前資料夾中的 Visual Gallery Obsidian 外掛。
 > 先讀 AGENTS.md、README.md、RELEASE_NOTES.md 和本交接檔，然後讀
-> docs/EXPLORER_021.md、EXPLORER_022.md、EXPLORER_023.md、EXPLORER_024.md、CRAFT_025.md。
+> docs/EXPLORER_021.md、EXPLORER_022.md、EXPLORER_023.md、EXPLORER_024.md、CRAFT_025.md、CRAFT_026.md。
 > 先確認 git 狀態、manifest 版本與最新遠端提交，保留既有本機修改。
-> 本交接發行基準為 0.1.25；不要覆寫任何已發布版本。
+> 本交接發行基準為 0.1.26；不要覆寫任何已發布版本。
 > 保留已定稿的三模式、格式化預覽、三段切換與三個動作按鈕、互動及 18 語言，不重設無關外觀。
 > 修改卡片 DOM/CSS 前必須先讀 docs/CARD_GEOMETRY.md 並遵守驗證契約。
 > 先建立可重現問題，在一次性 Obsidian 測試庫驗證修正；不要動正式筆記庫。
@@ -55,7 +55,7 @@ pnpm run build
 
 ## 設定與本機狀態
 
-共享：語言、標題、圖示、顏色、metadata、預設排序／篩選、收藏。
+共享：語言、標題、標題字級、圖示、顏色、metadata、預設排序／篩選、收藏。
 本機：每資料夾顯示模式、各模式捲動與上次瀏覽、目前資料夾與當頁排序／篩選、捲動、卡片寬度、側欄偏好、目錄展開／捲動、收藏區收合。
 
 data.json 含共享設定與版本化合併狀態；sync-state/<device>.json 是各裝置的共享快照；
@@ -67,6 +67,7 @@ data.json 含共享設定與版本化合併狀態；sync-state/<device>.json 是
 
 - GalleryView.ts：圖庫、原生歷史、卡片事件、目標註冊、捲動錨點。
 - DisplayMode.ts：三段切換、瀑布定位與幾何方向鍵。NotePreview.ts：有界格式化預覽與卸載。
+- ListHeader.ts：四欄雙向排序／焦點／方向提示。VaultBrowser.ts：八方向排序與本機 recency 索引。
 - state/DisplayPreferences.ts：每資料夾模式／捲動與最近瀏覽，只存本機。
 - ExternalDrop.ts：外部拖入。能力檢查後使用 host 的 importAttachments，桌面上按需取
   Electron webUtils 的 File 路徑，目錄由原生 importer 處理；不解析文字／網址為本機路徑。
@@ -79,6 +80,12 @@ data.json 含共享設定與版本化合併狀態；sync-state/<device>.json 是
 上述私有 host API 都需能力檢查及實際 Obsidian 驗證；不可把它們當作穩定公開 API。
 
 ## 測試與證據界線
+
+0.1.26 最新結果見 **CRAFT_026.md**：標題預設 14px、設定 12–22px；列表為 56px 的
+平坦分隔線橫列，僅列表批准 R=0／透明正常框例外。四欄雙向排序、真實最近瀏覽更新、
+原生設定滑桿／重載、選取與檔案操作通過。公開 389／27 suites，混合工作區 564／43 suites；
+原有 648＋Craft 5,832 幾何情境皆零失敗，明暗各狀態畫面已查看。
+下方 0.1.25/0.1.24 的測試數為各版本歷史紀錄，不改寫成新版證據。
 
 0.1.25 新驗證與腳本見 **CRAFT_025.md**：三模式、格式化預覽、本機模式／重載、
 捲動錨點、六按鈕窄面板、三模式外部拖放、明暗所有狀態截圖通過。
@@ -120,7 +127,7 @@ visual-gallery-qa、visual-gallery-drag 或 visual-gallery-explorer- 識別。
 
 ## 再次發布
 
-依當次指示遞增 patch；0.1.25 後通常是 0.1.26，先查遠端避免撞版。
+依當次指示遞增 patch；0.1.26 後通常是 0.1.27，先查遠端避免撞版。
 更新 package.json、manifest.json、versions.json、版本斷言與 RELEASE_NOTES。
 完整 build、必要原生驗證，提交／推送；GitHub CI 必須通過。
 發布精確對應來源的 main.js、manifest.json、styles.css 三檔，核對 SHA256。
