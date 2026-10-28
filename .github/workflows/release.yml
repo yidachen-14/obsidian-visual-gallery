@@ -1,5 +1,11 @@
 name: Build attested release draft
 on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Unused release version matching manifest.json'
+        required: true
+        type: string
   push:
     tags: ['[0-9]*']
 permissions:
@@ -17,7 +23,7 @@ jobs:
       artifact-metadata: write
     env:
       GH_TOKEN: ${{ github.token }}
-      RELEASE_TAG: ${{ github.ref_name }}
+      RELEASE_TAG: ${{ inputs.tag || github.ref_name }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -38,6 +44,9 @@ jobs:
           fi
       - run: pnpm install --frozen-lockfile
       - run: pnpm run build
+      - name: Tag the successfully built source for a manual release
+        if: github.event_name == 'workflow_dispatch'
+        run: gh api "repos/$GITHUB_REPOSITORY/git/refs" --method POST -f ref="refs/tags/$RELEASE_TAG" -f sha="$GITHUB_SHA"
       - name: Attest the exact runtime files
         uses: actions/attest@v4
         with:
