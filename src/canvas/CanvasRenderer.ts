@@ -9,7 +9,6 @@ import { thumbnailBlob } from "../utils/thumbnailBlob";
 import { computeBounds, computeRenderDimensions, getAnchorPoint } from "./CanvasGeometry";
 import { parseJsonCanvas } from "./CanvasParser";
 import type {
-  CanvasEnd,
   JsonCanvasData,
   JsonCanvasEdge,
   JsonCanvasFileNode,
@@ -90,7 +89,7 @@ export class CanvasRenderer {
       this.options.maxDimension,
       this.options.pixelRatio,
     );
-    const canvas = document.createElement("canvas");
+    const canvas = createFragment().createEl("canvas");
     canvas.width = dimensions.width;
     canvas.height = dimensions.height;
     const context = canvas.getContext("2d");

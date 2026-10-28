@@ -6,10 +6,12 @@ export interface VisualGallerySettings {
   language: UiLanguage;
   cardWidth: number;
   titleFontSize: number;
+  headingFontSize: number;
   defaultFilter: GalleryFilter;
   defaultSort: GallerySort;
   showMetadata: boolean;
   galleryTitle: string;
+  vaultHomeName: string;
   lightStart: string;
   lightEnd: string;
   darkStart: string;
@@ -24,18 +26,27 @@ export interface VisualGallerySettings {
 }
 
 export const DEFAULT_SETTINGS: VisualGallerySettings = {
-  language: "en", cardWidth: 250, titleFontSize: 14, defaultFilter: "all", defaultSort: "modified",
-  showMetadata: true, galleryTitle: "",
+  language: "en", cardWidth: 250, titleFontSize: 14, headingFontSize: 24, defaultFilter: "all", defaultSort: "modified",
+  showMetadata: true, galleryTitle: "", vaultHomeName: "",
   lightStart: "#f7f7f5", lightEnd: "#eeeeeb", darkStart: "#262626", darkEnd: "#222222",
   folderLightStart: "#f7f7f5", folderLightEnd: "#eeeeeb", folderDarkStart: "#262626", folderDarkEnd: "#222222",
-  folderIcon: "folder", navigationIcon: "layout-grid", appearanceDefaultsVersion: 1,
+  folderIcon: "folder", navigationIcon: "home", appearanceDefaultsVersion: 1,
 };
 
-export function loadGallerySettings(saved: Partial<VisualGallerySettings> = {}): VisualGallerySettings {
+export function loadGallerySettings(input: unknown = {}): VisualGallerySettings {
+  const source = input && typeof input === "object" && !Array.isArray(input) ? input as Record<string, unknown> : {};
+  const saved: Partial<VisualGallerySettings> = {};
+  for (const key of Object.keys(DEFAULT_SETTINGS) as (keyof VisualGallerySettings)[]) {
+    const value = source[key];
+    if (typeof value !== typeof DEFAULT_SETTINGS[key] || (typeof value === "number" && !Number.isFinite(value))) continue;
+    Object.assign(saved, { [key]: value });
+  }
   const settings = { ...DEFAULT_SETTINGS, ...saved };
   settings.language = validLanguage(saved.language);
   settings.titleFontSize = validTitleFontSize(saved.titleFontSize);
+  settings.headingFontSize = validHeadingFontSize(saved.headingFontSize);
   settings.defaultSort = validSort(saved.defaultSort);
+  settings.defaultFilter = ["all", "canvas", "notes", "images", "pdf"].includes(settings.defaultFilter) ? settings.defaultFilter : "all";
   if (saved.appearanceDefaultsVersion === undefined && saved.darkStart?.toLowerCase() === "#4a4a4a") {
     settings.darkStart = DEFAULT_SETTINGS.darkStart;
   }
@@ -59,3 +70,7 @@ export const COVER_COLOR_PAIRS = [
 ] as const;
 
 export const COVER_COLOR_KEYS = ["lightStart", "lightEnd", "darkStart", "darkEnd", "folderLightStart", "folderLightEnd", "folderDarkStart", "folderDarkEnd"] as const;
+
+export function validHeadingFontSize(value: unknown): number {
+  return typeof value === "number" && Number.isFinite(value) ? Math.max(18, Math.min(40, Math.round(value))) : 24;
+}

@@ -1,3 +1,4 @@
+import { LIBRARY_TRANSLATIONS, type LibraryTranslationKey } from "./i18n-library";
 import { DISPLAY_TRANSLATIONS, type DisplayTranslationKey } from "./i18n-display";
 import type { GalleryFilter, GallerySort } from "./browser/VaultBrowser";
 import { validLanguage, type UiLanguage } from "./languages";
@@ -277,11 +278,12 @@ export const TRANSLATIONS: Record<UiLanguage, Record<TranslationKey, string>> = 
 
 export function translate(
   language: UiLanguage,
-  key: TranslationKey | MobileTranslationKey | ExplorerTranslationKey | DisplayTranslationKey,
+  key: TranslationKey | MobileTranslationKey | ExplorerTranslationKey | DisplayTranslationKey | LibraryTranslationKey,
   values: Record<string, string | number> = {},
 ): string {
   const locale = validLanguage(language);
-  const template = key in DISPLAY_TRANSLATIONS.en ? DISPLAY_TRANSLATIONS[locale][key as DisplayTranslationKey]
+  const template = key in LIBRARY_TRANSLATIONS.en ? LIBRARY_TRANSLATIONS[locale][key as LibraryTranslationKey]
+    : key in DISPLAY_TRANSLATIONS.en ? DISPLAY_TRANSLATIONS[locale][key as DisplayTranslationKey]
     : key in EXPLORER_TRANSLATIONS.en ? EXPLORER_TRANSLATIONS[locale][key as ExplorerTranslationKey]
     : key in MOBILE_TRANSLATIONS.en
     ? MOBILE_TRANSLATIONS[locale][key as MobileTranslationKey] : TRANSLATIONS[locale][key as TranslationKey];

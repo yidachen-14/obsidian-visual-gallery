@@ -72,7 +72,7 @@ export class MarqueeSelection {
     event.preventDefault();
     this.root.focus({ preventScroll: true });
     const start = this.point(event.clientX, event.clientY);
-    const overlay = document.createElement('div');
+    const overlay = this.root.createDiv();
     overlay.className = 'visual-gallery-marquee';
     overlay.setAttribute('aria-hidden', 'true');
     overlay.hidden = true;

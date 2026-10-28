@@ -23,19 +23,39 @@ export function galleryToolbarSizing(available: number, count = 3, touch = false
 
 function textWidth(element: HTMLElement | null, text = element?.textContent ?? ""): number {
   if (!element) return 0;
-  const context = element.ownerDocument.createElement("canvas").getContext("2d");
+  const context = element.ownerDocument.adoptNode(createFragment()).createEl("canvas").getContext("2d");
   if (!context) return element.scrollWidth;
   const style = getComputedStyle(element);
   context.font = style.font;
   return context.measureText(text).width + Math.max(0, text.length - 1) * (parseFloat(style.letterSpacing) || 0);
 }
 
+/** Preferred card widths are retained until fitting one more column only needs
+ * a modest compression. Content stops growing once it reaches the page cap. */
+export function craftPageLayout(available: number, preferred: number, gap: number, count: number, mode: "grid" | "masonry" | "list") {
+  const space = Math.max(0, Math.min(1120, available));
+  if (mode === "list" || count === 0) return { width: space, cardWidth: Math.min(preferred, space), columns: 1, fluid: space < preferred };
+  let columns = Math.max(1, Math.floor((space + gap) / (preferred + gap)));
+  const maxColumns = Math.max(1, Math.floor((1120 + gap) / (preferred + gap)));
+  if (columns < maxColumns && (space - columns * gap) / (columns + 1) >= preferred * .8) columns++;
+  columns = Math.max(1, Math.min(columns, count));
+  const cardWidth = Math.max(0, Math.min(preferred, (space - (columns - 1) * gap) / columns));
+  return { width: columns * cardWidth + (columns - 1) * gap, cardWidth, columns, fluid: columns === 1 && cardWidth < preferred };
+}
+
 export function syncGalleryLayout(shell: HTMLElement, layout: HTMLElement, grid: HTMLElement, count: number, cardWidth: number, mode: "grid" | "masonry" | "list" = "grid"): void {
   const style = getComputedStyle(shell);
-  const available = parseFloat(style.width) - (style.boxSizing === "border-box"
+  const shellWidth = parseFloat(style.width) - (style.boxSizing === "border-box"
     ? parseFloat(style.paddingLeft) + parseFloat(style.paddingRight) + parseFloat(style.borderLeftWidth) + parseFloat(style.borderRightWidth) : 0);
   const gap = parseFloat(getComputedStyle(grid).columnGap) || 0;
-  const result = galleryRowLayout(available, cardWidth, gap, count, shell.ownerDocument.defaultView!.matchMedia("(max-width: 720px)").matches);
+  const craft = !!shell.closest(".is-craft");
+  const available = craft ? Math.min(1120, shellWidth) : shellWidth;
+  const preferred = craftPageLayout(available, cardWidth, gap, count, mode);
+  const result = craft ? preferred : galleryRowLayout(available, cardWidth, gap, count, shell.ownerDocument.defaultView!.matchMedia("(max-width: 720px)").matches);
+  if (craft) {
+    grid.style.setProperty("--vg-effective-card-width", preferred.cardWidth + "px");
+    grid.style.setProperty("--vg-columns", String(preferred.columns));
+  }
   const header = layout.querySelector<HTMLElement>(".visual-gallery-header");
   const controls = layout.querySelector<HTMLElement>(".visual-gallery-controls");
   const switcher = layout.querySelector<HTMLElement>(".visual-gallery-mode-switch");

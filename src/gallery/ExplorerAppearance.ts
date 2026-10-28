@@ -45,15 +45,18 @@ export function installExplorerAppearance(
   homeLabel: () => string,
   navigate: (folder: TFolder) => Promise<void>,
   onError: (error: unknown) => void,
+  appearance?: () => { name: string; icon: string },
 ): void {
-  const home = document.createElement("button");
+  const home = view.containerEl.createEl("button");
   home.type = "button";
   home.className = "visual-gallery-explorer-home";
-  decorativeIcon(home, "visual-gallery-explorer-home-icon", "house");
+  const icon = decorativeIcon(home, "visual-gallery-explorer-home-icon", "house");
   const name = home.createSpan({ cls: "visual-gallery-explorer-home-name", text: app.vault.getName() });
   view.containerEl.insertBefore(home, view.navFileContainerEl);
   const labels = () => {
-    name.setText(app.vault.getName());
+    const current = appearance?.();
+    name.setText(current?.name.trim() || app.vault.getName());
+    setIcon(icon, current?.icon || "house");
     setTooltip(home, homeLabel());
   };
   labels();
@@ -74,7 +77,7 @@ export function installExplorerAppearance(
     view.onFileContextMenu?.(event, app.vault.getRoot());
   });
   view.attachDropHandler?.(app.vault.getRoot(), home);
-  const setState = view.setState;
+  const setState = view.setState.bind(view);
   view.setState = async (state, result) => { await setState.call(view, state, result); labels(); };
 
   const decorated = new WeakSet<object>();
@@ -94,7 +97,7 @@ export function installExplorerAppearance(
     badge.setAttribute("aria-hidden", "true");
     node.selfEl.setAttribute("aria-expanded", String(!node.collapsed));
     if (node.setCollapsed) {
-      const collapse = node.setCollapsed;
+      const collapse = node.setCollapsed.bind(node);
       node.setCollapsed = (collapsed, animate) => {
         const result = collapse.call(node, collapsed, animate);
         node.selfEl.setAttribute("aria-expanded", String(!node.collapsed));
@@ -123,7 +126,7 @@ export function installExplorerAppearance(
     if (disposed || timer !== null) return;
     timer = window.setTimeout(refresh, 30);
   };
-  const create = view.onCreate;
+  const create = view.onCreate.bind(view);
   view.onCreate = file => {
     create.call(view, file);
     if (file instanceof TFolder) decorate(file);

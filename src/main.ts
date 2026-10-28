@@ -38,7 +38,7 @@ export default class VisualGalleryPlugin extends Plugin {
   private readonly favoriteRefreshers = new Set<() => void>();
 
   async onload(): Promise<void> {
-    const saved = (await this.loadData() ?? {}) as Partial<VisualGallerySettings>;
+    const saved: unknown = await this.loadData();
     this.gallerySettings = loadGallerySettings(saved);
     const pluginDirectory = this.manifest.dir
       ?? normalizePath(`${this.app.vault.configDir}/plugins/${this.manifest.id}`);
@@ -47,8 +47,8 @@ export default class VisualGalleryPlugin extends Plugin {
     this.registerEvent(this.app.workspace.on("file-open", file => { if (file instanceof TFile) display.record(file.path); }));
     this.registerEvent(this.app.vault.on("rename", (file, oldPath) => display.rename(oldPath, file.path)));
     this.registerEvent(this.app.vault.on("delete", file => display.remove(file.path)));
-    const width = this.app.loadLocalStorage("visual-gallery-card-width");
-    this.gallerySettings.cardWidth = validCardWidth(width ?? saved.cardWidth);
+    const width: unknown = this.app.loadLocalStorage("visual-gallery-card-width");
+    this.gallerySettings.cardWidth = validCardWidth(width ?? this.gallerySettings.cardWidth);
     this.app.saveLocalStorage("visual-gallery-card-width", this.gallerySettings.cardWidth);
     this.localBrowsing = {
       device,
@@ -67,7 +67,7 @@ export default class VisualGalleryPlugin extends Plugin {
         void this.refreshSettingsUI();
       },
     });
-    await this.sync.load(saved);
+    await this.sync.load(loadGallerySettings(saved));
     this.registerInterval(window.setInterval(() => void this.onExternalSettingsChange(), 5000));
     const canvasCache = new ThumbnailCache(this.app.vault.adapter, pluginDirectory, CANVAS_RENDERER_VERSION);
     const pdfCache = new ThumbnailCache(
@@ -94,8 +94,8 @@ export default class VisualGalleryPlugin extends Plugin {
         return navigation;
       };
       const onError = (error: unknown) => this.explorerError(error);
-      const view = createGalleryExplorer(this.app, leaf, () => this.t("explorerTitle"), navigate, onError);
-      installExplorerAppearance(this.app, view, () => `${this.t("iconHome")} · ${this.app.vault.getName()}`, navigate, onError);
+      const view = createGalleryExplorer(this.app, leaf, () => this.t("explorerTitle"), navigate, onError, () => this.gallerySettings.navigationIcon);
+      installExplorerAppearance(this.app, view, () => `${this.t("iconHome")} · ${this.gallerySettings.vaultHomeName.trim() || this.app.vault.getName()}`, navigate, onError, () => ({ name: this.gallerySettings.vaultHomeName, icon: this.gallerySettings.navigationIcon }));
       installLocalExplorerState(this.app, view, device);
       const refresh = installExplorerFavorites(this.app, view, {
         paths: () => this.sync?.favorites() ?? [],

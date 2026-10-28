@@ -3,6 +3,8 @@ import process from "node:process";
 import { builtinModules } from "node:module";
 import { readFile } from "node:fs/promises";
 
+import { localOnlyPdf } from "./scripts/build/pdf-local-only.mjs";
+
 const production = process.argv[2] === "production";
 const notices = await Promise.all([
   readFile("LICENSE", "utf8"),
@@ -16,8 +18,11 @@ const context = await esbuild.context({
   plugins: [{
     name: "embed-pdf-worker",
     setup(build) {
+      build.onLoad({ filter: /pdfjs-dist[\\/]build[\\/]pdf\.mjs$/ }, async ({ path }) => ({
+        contents: await localOnlyPdf(await readFile(path, "utf8")), loader: "js",
+      }));
       build.onLoad({ filter: /pdf\.worker\.min\.mjs$/ }, async ({ path }) => ({
-        contents: await readFile(path, "utf8"), loader: "text",
+        contents: await localOnlyPdf(await readFile(path.replace("pdf.worker.min.mjs", "pdf.worker.mjs"), "utf8"), true), loader: "text",
       }));
     },
   }],

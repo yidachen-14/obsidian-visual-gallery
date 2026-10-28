@@ -38,7 +38,7 @@ export class SettingsSync {
   update(patch: Partial<VisualGallerySettings>): Promise<void> {
     return this.mutate(() => {
       const clock = nextClock(this.state);
-      for (const key of SHARED_KEYS) if (patch[key] !== undefined) this.state.settings[key] = { value: patch[key]!, clock, device: this.storage.device };
+      for (const key of SHARED_KEYS) if (patch[key] !== undefined) this.state.settings[key] = { value: patch[key], clock, device: this.storage.device };
     });
   }
   toggleFavorite(path: string): Promise<void> {

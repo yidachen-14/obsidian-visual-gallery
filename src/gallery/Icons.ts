@@ -1,10 +1,10 @@
-import { setIcon } from "obsidian";
+import { setIcon, getIconIds } from "obsidian";
 
 export const FOLDER_ICONS = ["legacy-folder", "folder", "folders", "archive", "box", "library", "book-open", "folder-heart", "folder-cog", "folder-tree"] as const;
 export const NAVIGATION_ICONS = ["layout-grid", "gallery-horizontal", "images", "folder", "library", "book-open", "film", "clapperboard", "palette", "home"] as const;
 
 export function validIcon(value: string | undefined, choices: readonly string[], fallback: string): string {
-  return value && choices.includes(value) ? value : fallback;
+  return value && (choices.includes(value) || getIconIds().includes(value)) ? value : fallback;
 }
 
 export function centeredIconViewBox(bounds: { x: number; y: number; width: number; height: number }, width: number, height: number): string | null {
@@ -19,7 +19,7 @@ function centerSvgArtwork(element: HTMLElement, svg: SVGSVGElement, glyph: boole
     if (glyph) {
       // Center visible glyph ink, not the font's asymmetric ascent/descent box.
       // Keep the original character and font; SVG inherits theme color live.
-      const canvas = element.ownerDocument.createElement("canvas");
+      const canvas = element.ownerDocument.adoptNode(createFragment()).createEl("canvas");
       const context = canvas.getContext("2d");
       if (!context) return;
       context.font = `650 24px ${getComputedStyle(element).fontFamily}`;
@@ -40,17 +40,17 @@ export function renderGalleryIcon(element: HTMLElement, icon: string): void {
   element.classList.toggle("is-legacy-folder", icon === "legacy-folder");
   const glyph = icon === "legacy-folder";
   if (glyph) {
-    const svg = element.ownerDocument.createElementNS("http://www.w3.org/2000/svg", "svg");
+    const svg = element.ownerDocument.adoptNode(createFragment()).createSvg("svg");
     svg.setAttribute("viewBox", "0 0 24 24");
     svg.setAttribute("class", "svg-icon visual-gallery-glyph-icon");
-    const text = element.ownerDocument.createElementNS(svg.namespaceURI, "text");
+    const text = svg.createSvg("text");
     text.setAttribute("x", "0"); text.setAttribute("y", "0");
     text.setAttribute("font-size", "24"); text.setAttribute("font-weight", "650");
     text.setAttribute("fill", "currentColor"); text.setAttribute("stroke", "none");
     text.textContent = "⌑";
     svg.append(text); element.append(svg);
   } else {
-    setIcon(element, icon);
+    setIcon(element, icon === "folder" ? "lucide-folder" : icon);
   }
   const svg = element.querySelector("svg");
   if (svg) {

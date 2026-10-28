@@ -1,8 +1,8 @@
 /** Long press only claims a completed hold. Scrolling/pinch gestures stay native. */
 export class TouchInteraction {
-  private hold: { id: number; x: number; y: number; target: HTMLElement; timer: ReturnType<typeof setTimeout> } | null = null;
+  private hold: { id: number; x: number; y: number; target: HTMLElement; timer: number } | null = null;
   private suppressed: HTMLElement | null = null;
-  private suppressTimer: ReturnType<typeof setTimeout> | null = null;
+  private suppressTimer: number | null = null;
   constructor(private root: HTMLElement, private held: (card: HTMLElement, x: number, y: number) => void) {
     root.addEventListener("pointerdown", this.down);
     root.addEventListener("pointermove", this.move);
@@ -18,29 +18,29 @@ export class TouchInteraction {
     if (busy || !event.isPrimary || event.button !== 0 || !["touch", "pen"].includes(event.pointerType)) return;
     const target = event.target instanceof Element ? event.target.closest<HTMLElement>(".visual-gallery-card") : null;
     if (!target) return;
-    this.hold = { id: event.pointerId, x: event.clientX, y: event.clientY, target, timer: setTimeout(() => this.fire(), 550) };
+    this.hold = { id: event.pointerId, x: event.clientX, y: event.clientY, target, timer: window.setTimeout(() => this.fire(), 550) };
   };
   private fire(): void {
     const hold = this.hold;
     this.cancelHold();
     if (!hold || !hold.target.isConnected) return;
     this.suppressed = hold.target;
-    if (this.suppressTimer) clearTimeout(this.suppressTimer);
+    if (this.suppressTimer) window.clearTimeout(this.suppressTimer);
     this.suppressTimer = null;
     this.held(hold.target, hold.x, hold.y);
   }
   private end = (): void => {
     this.cancelHold();
     if (this.suppressed) {
-      if (this.suppressTimer) clearTimeout(this.suppressTimer);
-      this.suppressTimer = setTimeout(() => { this.suppressed = null; this.suppressTimer = null; }, 1500);
+      if (this.suppressTimer) window.clearTimeout(this.suppressTimer);
+      this.suppressTimer = window.setTimeout(() => { this.suppressed = null; this.suppressTimer = null; }, 1500);
     }
   };
   private move = (event: PointerEvent): void => {
     if (this.hold && (event.pointerId !== this.hold.id || Math.hypot(event.clientX - this.hold.x, event.clientY - this.hold.y) > 10)) this.cancelHold();
   };
   private cancelHold = (): void => {
-    if (this.hold) clearTimeout(this.hold.timer);
+    if (this.hold) window.clearTimeout(this.hold.timer);
     this.hold = null;
   };
   private click = (event: MouseEvent): void => {
@@ -58,7 +58,7 @@ export class TouchInteraction {
   };
   reset(): void {
     this.cancelHold(); this.suppressed = null;
-    if (this.suppressTimer) clearTimeout(this.suppressTimer);
+    if (this.suppressTimer) window.clearTimeout(this.suppressTimer);
     this.suppressTimer = null;
   }
   dispose(): void {

@@ -4,6 +4,8 @@ Browse your Obsidian vault as a visual card gallery, with thumbnails of the **wh
 
 ## Features
 
+- Independent gallery heading size: default 24px, adjustable 18–40px under Interface; card title sizing remains separate. Existing-file tab activation has no reveal flash.
+
 - Adjustable **title font size** (12–22px, default 14px) under Card layout. Compact, flat list rows use horizontal dividers; click Name, Last viewed, Modified or Created to reverse sorting. Last viewed is local history and unseen files remain last.
 - Craft-style **Masonry / Grid / List** views with an icon-only segmented switch before Create, Sort and Filter. Each folder remembers its own view on this device. Switching keeps selection, sorting/filtering and the visible file as a scroll anchor while previews finish loading.
 - Equal-height grid cards with titles above formatted document previews; variable-height masonry with bounded content; compact list rows with miniature previews, summaries and last-viewed/modified/created dates. Date columns disappear as the pane narrows. Last viewed is local history, shown as a dash until recorded.
@@ -58,17 +60,26 @@ You can also install manually from the [GitHub releases](https://github.com/yida
 
 PDF rendering is included in `main.js`; no separate worker, external service or download is needed. When updating manually, disable the plugin, replace those three files, and re-enable it. Keep your `data.json` to retain settings.
 
+
+## Library workflow
+
+- The button above the file tree defaults to the vault name. Change **Library home name** in Interface; leave it blank to restore the vault name.
+- New defaults use a closed folder for folder cards and Home for navigation. Saved custom icons are retained. Both icon settings open a searchable grid of Obsidian's registered icons, with current-selection feedback and keyboard navigation. Search accepts icon names/IDs and translated common families such as folders and Home.
+- Grid, masonry and list share a bounded page width (1120 px content maximum). Cards keep their preferred width in wide panes and compress when the pane narrows. The title and icon toolbar remain on one row.
+- Creating a note or Canvas selects it in the current gallery without opening it. Opening from the gallery or its sidebar activates an existing file tab, or creates one new tab while retaining the gallery. Concurrent requests for the same file share one open operation.
+- For multiple selections, Delete first shows the complete batch for confirmation. Cancel leaves originals untouched. The count-labelled new-folder action moves the selected originals into one sibling folder; name collisions and stale selections are rejected, and interrupted moves attempt safe rollback. Partial failures are reported.
+
 ## Usage
 
 Click the gallery ribbon icon, or run **Visual Gallery: Open Visual Gallery** in the command palette. The gallery restores this device's last folder; on a first visit it uses the active note's folder. Use breadcrumbs to navigate, the file-type filter to narrow the cards, and the sort menu to reorder files. Folders remain first and sorted A–Z, like the native file explorer.
 
 For multiple selections, use Command on macOS or Ctrl on Windows/Linux. Command/Ctrl+A selects currently displayed filtered cards. Shift-click and Shift+arrow keys extend a range. Drag from blank gallery space to select files and folders together.
 
-On iPhone, iPad and Android, use the touch selection and destination menu described above instead of desktop HTML drag-and-drop or modifier keys. The mobile card menu omits Finder/system file manager and omits Rename when multiple items are selected. Delete still acts on the pressed item only and uses Obsidian's confirmation/trash preferences. Desktop mouse behavior is unchanged. The header retains exactly Create (+), Sort, Filter, with larger mobile touch targets.
+On iPhone, iPad and Android, use the touch selection and destination menu described above instead of desktop HTML drag-and-drop or modifier keys. The mobile card menu omits Finder/system file manager and omits Rename when multiple items are selected. Single and multiple selections always show a deletion confirmation. The header retains exactly Create (+), Sort, Filter, with larger mobile touch targets.
 
 Drag-and-drop and rename act on **original files**, not previews. Moves through gallery targets check name conflicts and invalid folder nesting before starting the batch. If a disk error interrupts a batch, a notice reports how many items moved; already completed moves are not automatically rolled back. Link updates follow Obsidian's preferences. Back up your vault before reorganizing important files.
 
-**Delete uses Obsidian's native deletion flow and preferences.** If you disabled confirmation or selected permanent deletion in Obsidian, those preferences also apply here. The card menu acts on the right-clicked item, not the entire selection.
+**Every deletion requires confirmation**, even if native deletion prompts are disabled. All deletion respects Obsidian's trash-location preference. Multi-selection menus omit Rename and Finder/system reveal, and can create a folder containing all selected items.
 
 Settings include a read-only cache location and **Clear thumbnail cache**. Clearing the cache removes disposable previews only; the next gallery visit regenerates them. Commands can also rebuild all Canvas previews or generate a preview for the active Canvas.
 
@@ -99,6 +110,8 @@ destination after going back clears the old forward branch.
 - **Show in Finder/system file manager** resolves the original vault item's local path and asks the operating system to reveal it. It does not read arbitrary files outside the vault.
 - Any synchronization service you configured for the vault may also synchronize the plugin's cache and settings. Cache files contain visual previews of your notes.
 - The plugin does not install or update itself; updates use Obsidian or manual installation.
+
+Community review disclosures: vault enumeration is needed to list files and rebuild previews. Base64 conversion handles local binary data and older WebViews. The pinned PDF.js source contains optional WASM filenames, but no WASM assets are shipped or enabled. The build removes dynamic compilation and replaces PDF.js fetch/XHR/worker fallback paths with explicit denial functions; remote module imports are blocked. The embedded local worker is created by Visual Gallery itself. See [the review remediation notes](docs/REVIEW_027.md) for the audit boundary and verification.
 
 ## Compatibility and limitations
 

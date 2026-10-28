@@ -32,13 +32,13 @@ export class BundledPdfWorker {
 
   async ready(timeout = 10000): Promise<PDFWorker> {
     const worker = this.get();
-    let timer: ReturnType<typeof setTimeout> | undefined;
+    let timer: number | undefined;
     try {
       await Promise.race([worker.promise, this.failure,
-        new Promise((_, reject) => { timer = setTimeout(() => reject(new Error("Local PDF worker startup timed out.")), timeout); })]);
+        new Promise((_, reject) => { timer = window.setTimeout(() => reject(new Error("Local PDF worker startup timed out.")), timeout); })]);
       return worker;
     } catch (error) { this.dispose(); throw error; }
-    finally { if (timer) clearTimeout(timer); }
+    finally { if (timer) window.clearTimeout(timer); }
   }
 
   dispose(): void {

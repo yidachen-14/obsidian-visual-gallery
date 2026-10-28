@@ -1,0 +1,57 @@
+name: Build attested release draft
+on:
+  push:
+    tags: ['[0-9]*']
+permissions:
+  contents: read
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      id-token: write
+      attestations: write
+      artifact-metadata: write
+    env:
+      GH_TOKEN: ${{ github.token }}
+      RELEASE_TAG: ${{ github.ref_name }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.12.1
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - name: Require matching versions and an unused release tag
+        run: |
+          node --input-type=module -e 'import fs from "node:fs"; const read=p=>JSON.parse(fs.readFileSync(p,"utf8")); const m=read("manifest.json"); if(m.version!==process.env.RELEASE_TAG || read("package.json").version!==m.version || read("versions.json")[m.version]!==m.minAppVersion) throw Error("Release version mismatch");'
+          if gh release view "$RELEASE_TAG" >/dev/null 2>&1; then
+            echo 'Release already exists; refusing to overwrite its assets.' >&2
+            exit 1
+          fi
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm run build
+      - name: Attest the exact runtime files
+        uses: actions/attest@v4
+        with:
+          subject-path: |
+            main.js
+            styles.css
+            manifest.json
+      - uses: actions/upload-artifact@v4
+        with:
+          name: visual-gallery-${{ github.ref_name }}
+          path: |
+            main.js
+            manifest.json
+            styles.css
+      - name: Create a reviewable draft with those same files
+        run: |
+          gh release create "$RELEASE_TAG" main.js manifest.json styles.css --verify-tag --draft --title "$RELEASE_TAG" --notes-file "docs/releases/$RELEASE_TAG.md"

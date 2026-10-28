@@ -1,3 +1,32 @@
+## 0.1.29 — 2026-10-28
+
+- Remove yellow tab flashing when activating an existing file.
+- Increase gallery heading to 24px and add an independent 18–40px setting.
+- Always confirm single-item and multi-item deletion.
+- Includes local 0.1.27 and 0.1.28 improvements.
+
+See [release details](docs/releases/0.1.29.md).
+
+## 0.1.28 — local candidate, 2026-10-28
+
+- Customize the sidebar Home name and select icons from a searchable icon library.
+- Default to closed-folder cards and Home navigation; retain saved custom icons.
+- Bound all three modes to a preferred page width and adapt to narrow panes.
+- Stay in the gallery after creating notes/Canvases; open files in new tabs and reuse existing tabs from either entry point.
+- Confirm deletion of the complete multi-selection, omit Rename/system reveal, and offer a new folder containing the selected originals.
+- Preserve card geometry, native navigation and existing settings; complete 18-language translations.
+
+Validation: 622 workspace tests; isolated clean build passes 447 Gallery tests plus two PDF policy tests and reproduces all three runtime assets. Native macOS Obsidian 1.14.5 and 6,480 geometry fixture cases pass. Local only; not published. See [full notes](docs/releases/0.1.28.md) and [verification](docs/LIBRARY_028.md).
+
+## 0.1.27 — local candidate, 2026-10-28
+
+- Address Community source warnings and add reproducible lint/PDF policy gates.
+- Make all plugin settings searchable using native definitions and refresh translated settings safely.
+- Build PDF.js with denied networking/fallback imports, no dynamic compiler or WebAssembly; retain identical previews for the validated fixture.
+- Prepare tag-based asset attestations and unpublished release drafts. Public review and attestations are pending execution.
+
+See [full release notes](docs/releases/0.1.27.md) and [verification](docs/REVIEW_027.md).
+
 # Visual Gallery 0.1.26 — smaller titles, flat lists and sortable columns
 
 - Reduce default card/list titles to 14px and the page heading to 15px. Add a native

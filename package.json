@@ -1,6 +1,6 @@
 {
   "name": "obsidian-visual-gallery",
-  "version": "0.1.26",
+  "version": "0.1.29",
   "description": "A visual vault browser with whole-canvas thumbnails for Obsidian.",
   "main": "main.js",
   "type": "module",
@@ -9,8 +9,10 @@
     "dev": "node esbuild.config.mjs",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
-    "build": "tsc --noEmit && vitest run && node esbuild.config.mjs production",
-    "render:fixtures": "node scripts/build-render-fixtures.mjs && node .test-build/render-fixtures.mjs"
+    "build": "eslint src --max-warnings 0 && node --test scripts/tests/pdf-local-only.mjs && tsc --noEmit && vitest run && node esbuild.config.mjs production",
+    "render:fixtures": "node scripts/build-render-fixtures.mjs && node .test-build/render-fixtures.mjs",
+    "lint": "eslint src --max-warnings 0",
+    "test:pdf-policy": "node --test scripts/tests/pdf-local-only.mjs"
   },
   "keywords": [
     "obsidian",
@@ -24,11 +26,15 @@
     ]
   },
   "devDependencies": {
+    "@eslint/js": "9.39.2",
     "@napi-rs/canvas": "^0.1.80",
     "@types/node": "^22.15.17",
     "esbuild": "^0.25.5",
+    "eslint": "9.39.2",
+    "eslint-plugin-obsidianmd": "0.4.2",
     "obsidian": "latest",
     "typescript": "^5.8.3",
+    "typescript-eslint": "8.72.1",
     "vitest": "^3.2.4"
   },
   "dependencies": {

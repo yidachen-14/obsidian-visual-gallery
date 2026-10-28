@@ -8,5 +8,5 @@ export function renameDestination(item: TAbstractFile, name: string): string | n
 }
 
 export function isValidItemName(name: string): boolean {
-  return !!name && name !== "." && name !== ".." && !/[\\/:*?"<>|\u0000-\u001f]/.test(name) && !name.endsWith(".");
+  return !!name && name !== "." && name !== ".." && !/[\\/:*?"<>|]/.test(name) && !Array.from(name).some(char => char.charCodeAt(0) < 32) && !name.endsWith(".");
 }

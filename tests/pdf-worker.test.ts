@@ -11,6 +11,7 @@ describe("bundled PDF worker", () => {
   const revoke = vi.fn();
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.stubGlobal("window", globalThis);
     mocks.create.mockReturnValue({ destroy: mocks.destroy });
     vi.stubGlobal("Worker", vi.fn(function () { return { terminate, addEventListener: vi.fn() }; }));
     vi.stubGlobal("URL", { createObjectURL: create, revokeObjectURL: revoke });
@@ -44,6 +45,7 @@ describe("bundled PDF worker", () => {
 
   it("times out startup instead of hanging the PDF queue", async () => {
     vi.useFakeTimers();
+    vi.stubGlobal("window", globalThis);
     try {
       mocks.create.mockReturnValueOnce({ destroy: mocks.destroy, promise: new Promise(() => {}) });
       const bundled = new BundledPdfWorker();

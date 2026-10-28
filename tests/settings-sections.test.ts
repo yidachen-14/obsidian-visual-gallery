@@ -28,7 +28,9 @@ describe("purpose-based native settings sections", () => {
         if (key !== "commandClear") expect(source.match(new RegExp(`"${key}"`, "g"))).toHaveLength(1);
       }
     }
-    expect(source).toContain('.setName(t(key)).setHeading()');
+    expect(source).toContain('groups.push({ type: "group", heading: t(key), items })');
+    expect(source).toContain('getSettingDefinitions()');
+    expect(source).not.toContain('this.display()');
     expect(source).toContain('.addOptions(LANGUAGE_OPTIONS)');
     expect(source).not.toContain('language === "en" ? 0');
   });

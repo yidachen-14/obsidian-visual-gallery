@@ -15,7 +15,7 @@ afterEach(() => { Platform.isMobile = false; vi.useRealTimers(); vi.unstubAllGlo
 describe("mobile compatibility", () => {
   it("allows mobile installation without rewriting existing released versions", () => {
     const manifest = JSON.parse(readFileSync(new URL("../manifest.json", import.meta.url), "utf8"));
-    expect(manifest).toMatchObject({ version: "0.1.26", isDesktopOnly: false, minAppVersion: "1.13.7" });
+    expect(manifest).toMatchObject({ version: "0.1.29", isDesktopOnly: false, minAppVersion: "1.13.7" });
     const versions = JSON.parse(readFileSync(new URL("../versions.json", import.meta.url), "utf8"));
     expect(versions["0.1.19"]).toBe("1.13.7");
     expect(versions["0.1.20"]).toBe("1.13.7");
@@ -94,7 +94,8 @@ describe("touch holds never claim scrolling", () => {
     contains(node: unknown): boolean { return node === this; }
   }
   function fixture() {
-    vi.useFakeTimers(); vi.stubGlobal("Element", Card); vi.stubGlobal("Node", Card);
+    vi.useFakeTimers();
+    vi.stubGlobal("window", globalThis); vi.stubGlobal("Element", Card); vi.stubGlobal("Node", Card);
     const root = new EventTarget(), card = new Card(), held = vi.fn();
     const touch = new TouchInteraction(root as never, held);
     const dispatch = (type: string, values: Record<string, unknown> = {}) => {

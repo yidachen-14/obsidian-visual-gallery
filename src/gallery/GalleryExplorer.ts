@@ -1,3 +1,4 @@
+import { openGalleryFile } from "./OpenFile";
 import { TFile, TFolder, type App, type View, type WorkspaceLeaf, type TAbstractFile } from "obsidian";
 
 export const GALLERY_EXPLORER_TYPE = "visual-gallery-explorer";
@@ -67,6 +68,7 @@ export function createGalleryExplorer(
   title: () => string,
   navigate: (folder: TFolder) => Promise<void>,
   onError: (error: unknown) => void,
+  icon: () => string = () => "home",
 ): NativeExplorer {
   const factory = nativeExplorerFactory(app);
   if (!factory) throw new Error("The Obsidian Files core plugin is unavailable");
@@ -74,7 +76,7 @@ export function createGalleryExplorer(
   if (!isNativeExplorer(view)) throw new Error("Unsupported Obsidian Files view API");
   view.getViewType = () => GALLERY_EXPLORER_TYPE;
   view.getDisplayText = title;
-  view.getIcon = () => "folder-tree";
+  view.getIcon = icon;
   // Native folds use tree.id as their storage namespace. Keep the two trees'
   // expansion preferences independent, including across restarts.
   view.tree.id = GALLERY_EXPLORER_TYPE;
@@ -83,7 +85,7 @@ export function createGalleryExplorer(
   const current = (file: TAbstractFile) => file === app.vault.getRoot()
     || app.vault.getAbstractFileByPath(file.path) === file;
   const open = (file: TFile) => {
-    if (current(file)) void app.workspace.getLeaf("tab").openFile(file).catch(onError);
+    if (current(file)) void openGalleryFile(app, file).catch(onError);
   };
   const select = (node: FileNode, event: MouseEvent | KeyboardEvent) => {
     const tree = view.tree;
@@ -106,7 +108,7 @@ export function createGalleryExplorer(
     if (!node || patched.has(node)) return;
     patched.add(node);
     if (file instanceof TFile) node.shouldDisplay = () => true;
-    const click = node.onSelfClick;
+    const click = node.onSelfClick.bind(node);
     node.onSelfClick = event => {
       if (event.defaultPrevented || editableTarget(event) || view.fileBeingRenamed === file || !current(file)) return;
       if ("button" in event && event.button !== 0) return;
@@ -129,10 +131,10 @@ export function createGalleryExplorer(
       }
     };
   };
-  const create = view.onCreate;
+  const create = view.onCreate.bind(view);
   view.onCreate = file => { create.call(view, file); patchNode(file); };
   Object.values(view.fileItems).forEach(node => patchNode(node.file));
-  const showUnsupported = view.updateShowUnsupportedFiles;
+  const showUnsupported = view.updateShowUnsupportedFiles.bind(view);
   view.updateShowUnsupportedFiles = () => {
     showUnsupported.call(view);
     view.navFileContainerEl.addClass("show-unsupported");

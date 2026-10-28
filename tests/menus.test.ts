@@ -59,12 +59,12 @@ describe("native gallery menus", () => {
     menu.items[["note", "canvas", "folder"].indexOf(kind)]?.callback();
     expect(create).toHaveBeenCalledExactlyOnceWith(kind);
   });
-  it.each(UI_LANGUAGES)("omits rename entirely for a multi-selection in %s", language => {
-    const remove = vi.fn(), reveal = vi.fn();
-    const menu = cardMenu(language, true, true, null, remove, reveal) as unknown as StubMenu;
-    expect(menu.items.map(item => item?.title)).toEqual([translate(language, "showInFinder"), undefined, translate(language, "delete")]);
+  it.each(UI_LANGUAGES)("omits rename/Finder and offers grouping for a multi-selection in %s", language => {
+    const remove = vi.fn(), reveal = vi.fn(), group = vi.fn();
+    const menu = cardMenu(language, true, true, null, remove, reveal, { count: 3, create: group }) as unknown as StubMenu;
+    expect(menu.items.map(item => item?.title)).toEqual([translate(language, "groupSelection", { count: 3 }), undefined, translate(language, "delete")]);
     expect(menu.items.some(item => item?.title === translate(language, "rename"))).toBe(false);
     menu.items.forEach(item => item?.callback());
-    expect(remove).toHaveBeenCalledOnce(); expect(reveal).toHaveBeenCalledOnce();
+    expect(remove).toHaveBeenCalledOnce(); expect(group).toHaveBeenCalledOnce(); expect(reveal).not.toHaveBeenCalled();
   });
 });

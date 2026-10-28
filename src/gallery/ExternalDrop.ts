@@ -1,3 +1,4 @@
+import { desktopElectron } from "../utils/desktopElectron";
 import { Platform, TFolder, type App, type TFile } from "obsidian";
 
 // The native Files view imports through this host API. Keep the private API
@@ -17,8 +18,8 @@ interface ImportHost extends App {
 function desktopPath(file: File): string {
   if (!Platform.isMobile) {
     try {
-      const electron = require("electron") as { webUtils?: { getPathForFile(file: File): string } };
-      const path = electron.webUtils?.getPathForFile(file);
+      const electron = desktopElectron();
+      const path = electron?.webUtils?.getPathForFile(file);
       if (path) return path;
     } catch { /* Browser/mobile File data remains available without Electron. */ }
   }
@@ -53,7 +54,7 @@ export class ExternalFileDrop {
     private readonly completed: () => void,
     private readonly failed: (error: unknown) => void,
     private readonly pathForFile: (file: File) => string = desktopPath,
-  ) { this.host = app as ImportHost; }
+  ) { this.host = app; }
 
   private current(folder: TFolder | null): folder is TFolder {
     return !!folder && (folder.isRoot() ? this.host.vault.getRoot() : this.host.vault.getAbstractFileByPath(folder.path)) === folder;

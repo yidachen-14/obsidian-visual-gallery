@@ -37,11 +37,13 @@ function fixture() {
     registerDomEvent: (_el: unknown, type: string, callback: (e: unknown) => void) => { domEvents[type] = callback; },
     getViewType: () => "file-explorer", getDisplayText: () => "Files", getIcon: () => "folder",
   };
-  const openFile = vi.fn(async () => {}), getLeaf = vi.fn(() => ({ openFile }));
+  let opened = false;
+  const fileLeaf = { view: { file: null as TFile | null }, getViewState: () => ({state:{file:fileLeaf.view.file?.path}}), loadIfDeferred: vi.fn(async()=>{}), openFile: vi.fn(async (file: TFile) => { fileLeaf.view.file = file; }) };
+  const openFile = fileLeaf.openFile, getLeaf = vi.fn(() => { opened=true;return fileLeaf; });
   const app = {
     viewRegistry: { getViewCreatorByType: () => () => native },
     vault: { getRoot: () => root, getAbstractFileByPath: (path: string) => files.get(path) },
-    workspace: { getLeaf, setActiveLeaf: vi.fn() },
+    workspace: { getLeaf, setActiveLeaf: vi.fn(), revealLeaf:vi.fn(async()=>{}), iterateAllLeaves:(fn:(leaf:WorkspaceLeaf)=>void)=>{if(opened)fn(fileLeaf as unknown as WorkspaceLeaf);} },
   } as unknown as App;
   const leaf = {} as WorkspaceLeaf, navigate = vi.fn(async () => {}), onError = vi.fn();
   const view = createGalleryExplorer(app, leaf, () => "Gallery files", navigate, onError);
@@ -69,13 +71,15 @@ describe("Visual Gallery native file browser adapter", () => {
     view.onFileOpen(null);
     expect(tree.selectedDoms.size).toBe(1);
   });
-  it("opens a double-clicked file and Enter in a new tab", () => {
-    const { note, view, domEvents, event, openFile, getLeaf } = fixture();
+  it("opens a double-clicked file in a new tab and reuses it for Enter", async () => {
+    const { app, note, view, domEvents, event, openFile, getLeaf } = fixture();
     domEvents.dblclick!({ button: 0, preventDefault: vi.fn(), target: { closest: (selector: string) => selector === ".nav-file-title" ? { dataset: { path: note.path } } : null } });
-    expect(getLeaf).toHaveBeenLastCalledWith("tab");
+    await vi.waitFor(() => expect(getLeaf).toHaveBeenLastCalledWith("tab"));
     expect(openFile).toHaveBeenCalledExactlyOnceWith(note);
     view.fileItems[note.path]!.onSelfClick(event({ key: "Enter" }) as unknown as KeyboardEvent);
-    expect(openFile).toHaveBeenCalledTimes(2);
+    await vi.waitFor(() => expect(app.workspace.setActiveLeaf).toHaveBeenCalled());
+    expect(openFile).toHaveBeenCalledTimes(1);
+    expect(getLeaf).toHaveBeenCalledTimes(1);
   });
   it("selects and navigates folder rows without changing either fold state; only the arrow toggles", () => {
     const { folder, navigate, click, view, tree, nativeClicks } = fixture();

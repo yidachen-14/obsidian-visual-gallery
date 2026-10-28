@@ -16,13 +16,13 @@ export function toolbarDefinitions(language: UiLanguage, filter: GalleryFilter, 
 /** Real toolbar DOM is shared with host-style QA, not a separately drawn mock. */
 export function renderGalleryToolbar(header: HTMLElement, language: UiLanguage, filter: GalleryFilter, sort: GallerySort,
   open: (action: ToolbarAction, button: HTMLButtonElement) => void): HTMLElement {
-  const controls = header.ownerDocument.createElement("div");
+  const controls = header.createDiv();
   controls.className = "visual-gallery-controls";
   controls.setAttribute("role", "toolbar");
   controls.setAttribute("aria-label", translate(language, "gallery"));
   header.appendChild(controls);
   for (const definition of toolbarDefinitions(language, filter, sort)) {
-    const button = header.ownerDocument.createElement("button");
+    const button = controls.createEl("button");
     button.type = "button";
     button.className = "clickable-icon nav-action-button visual-gallery-toolbar-button";
     button.dataset.action = definition.action;

@@ -21,11 +21,12 @@ export function filterMenu(language: UiLanguage, current: GalleryFilter, choose:
 }
 
 export function cardMenu(language: UiLanguage, finder: boolean, revealEnabled: boolean,
-  rename: (() => void) | null, remove: () => void, reveal: () => void): Menu {
+  rename: (() => void) | null, remove: () => void, reveal: () => void, group?: { count: number; create: () => void }): Menu {
   const menu = new Menu();
   if (rename) menu.addItem(item => item.setTitle(translate(language, "rename")).setIcon("pencil").onClick(rename));
-  menu.addItem(item => item.setTitle(translate(language, finder ? "showInFinder" : "showInSystem"))
+  if (rename) menu.addItem(item => item.setTitle(translate(language, finder ? "showInFinder" : "showInSystem"))
     .setIcon("folder-search").setDisabled(!revealEnabled).onClick(reveal));
+  if (group && group.count > 1) menu.addItem(item => item.setTitle(translate(language, "groupSelection", { count: group.count })).setIcon("folder-plus").onClick(group.create));
   menu.addSeparator();
   menu.addItem(item => item.setTitle(translate(language, "delete")).setIcon("trash-2").setWarning(true).onClick(remove));
   return menu;
@@ -41,13 +42,14 @@ export function creationMenu(language: UiLanguage, create: (kind: NewItemKind) =
 
 export function mobileCardMenu(language: UiLanguage, count: number, actions: {
   open: () => void; selectAll: () => void; clear: () => void; move: () => void;
-  rename: (() => void) | null; remove: () => void;
+  rename: (() => void) | null; remove: () => void; group?: () => void;
 }): Menu {
   const menu = new Menu();
   menu.addItem(item => item.setTitle(translate(language, "open")).setIcon("file").onClick(actions.open));
   menu.addItem(item => item.setTitle(translate(language, "selectAll")).setIcon("check-check").onClick(actions.selectAll));
   menu.addItem(item => item.setTitle(translate(language, "clearSelection")).setIcon("x").onClick(actions.clear));
   menu.addItem(item => item.setTitle(translate(language, "moveSelection")).setIcon("folder-input").setDisabled(count === 0).onClick(actions.move));
+  if (count > 1 && actions.group) menu.addItem(item => item.setTitle(translate(language, "groupSelection", { count })).setIcon("folder-plus").onClick(actions.group!));
   if (actions.rename) menu.addItem(item => item.setTitle(translate(language, "rename")).setIcon("pencil").onClick(actions.rename!));
   menu.addSeparator();
   menu.addItem(item => item.setTitle(translate(language, "delete")).setIcon("trash-2").setWarning(true).onClick(actions.remove));

@@ -68,6 +68,15 @@ Source: https://github.com/mozilla/pdf.js
 
 PDF first-page thumbnails use the bundled PDF.js library and worker.
 
+Modified for Visual Gallery 0.1.27: the build replaces PDF.js networking and
+worker-fallback globals with denial functions, blocks dynamic imports, disables
+WebAssembly, removes the eval capability probe and dynamic PostScript compiler,
+and retains the upstream PostScript interpreter. The embedded worker also
+includes Visual Gallery's older-WebView compatibility preamble. See
+`scripts/build/pdf-local-only.mjs` and `src/thumbnails/PdfCompatibility.ts`.
+These modifications are distributed with the original Apache-2.0 license and
+Mozilla copyright notice.
+
 Copyright 2012 Mozilla Foundation
 
 Licensed under the Apache License, Version 2.0. The complete license is distributed as `PDFJS_LICENSE.txt`.

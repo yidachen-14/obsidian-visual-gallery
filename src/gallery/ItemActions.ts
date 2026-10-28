@@ -1,3 +1,4 @@
+import { desktopElectron } from "../utils/desktopElectron";
 import { FileSystemAdapter, Platform, TFolder, normalizePath, type App, type TAbstractFile } from "obsidian";
 import { isValidItemName } from "./Rename";
 
@@ -44,7 +45,7 @@ export function canRevealItem(app: App): boolean {
 export function revealGalleryItem(app: App, item: TAbstractFile, injectedShell?: RevealShell): void {
   requireCurrentItem(app, item);
   if (!canRevealItem(app)) throw new Error("Not a local desktop vault");
-  const electron = injectedShell ? null : require("electron") as { shell?: RevealShell; remote?: { shell?: RevealShell } };
+  const electron = injectedShell ? null : desktopElectron();
   const shell = injectedShell ?? electron?.shell ?? electron?.remote?.shell;
   if (!shell?.showItemInFolder) throw new Error("System file manager is unavailable");
   shell.showItemInFolder((app.vault.adapter as FileSystemAdapter).getFullPath(item.path));

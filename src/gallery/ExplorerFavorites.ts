@@ -11,7 +11,7 @@ export interface ExplorerFavorites {
 }
 /** Shortcuts live outside the native tree, leaving its selection/menus/folds intact. */
 export function installExplorerFavorites(app: App, view: NativeExplorer, options: ExplorerFavorites): () => void {
-  const section = document.createElement("div");
+  const section = view.containerEl.createDiv();
   section.className = "visual-gallery-explorer-favorites";
   view.containerEl.insertBefore(section, view.navFileContainerEl);
   let collapsed = app.loadLocalStorage("visual-gallery-favorites-collapsed") === true;

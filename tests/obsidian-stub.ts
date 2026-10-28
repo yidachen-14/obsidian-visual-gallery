@@ -75,3 +75,12 @@ export class Menu {
   }
   addSeparator(): this { this.items.push(null); return this; }
 }
+
+export class PluginSettingTab {
+  containerEl = { addClass(_name: string): void {} };
+  constructor(_app: unknown, _plugin: unknown) {}
+  update(): void {}
+}
+
+export function getIconIds(): string[] { return ["folder", "folders", "archive", "box", "library", "book-open", "folder-heart", "folder-cog", "folder-tree", "layout-grid", "gallery-horizontal", "images", "film", "clapperboard", "palette", "home", "house", "lucide-folder", "camera", "alarm-clock"]; }
+export class Modal { constructor(_app: unknown) {} open(): void {} close(): void {} }

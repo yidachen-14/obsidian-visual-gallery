@@ -1,3 +1,6 @@
+import { openGalleryFile } from "./OpenFile";
+import { DeleteSelectionModal } from "./DeleteSelectionModal";
+import { groupGallerySelection, GroupSelectionError, trashGallerySelection } from "./SelectionActions";
 import { ItemView, Notice, Platform, TAbstractFile, TFile, TFolder, type ViewStateResult, type WorkspaceLeaf } from "obsidian";
 import { DisplayPreferences } from "../state/DisplayPreferences";
 import { renderDisplayModes, masonryBoxes, nearestCard, type DisplayMode } from "./DisplayMode";
@@ -9,7 +12,7 @@ import { CardSelection } from "./Selection";
 import { RenameModal } from "./RenameModal";
 import { MarqueeSelection } from "./MarqueeSelection";
 import { CreateItemModal } from "./CreateItemModal";
-import { canRevealItem, deleteGalleryItem, revealGalleryItem, type NewItemKind } from "./ItemActions";
+import { canRevealItem, revealGalleryItem, type NewItemKind } from "./ItemActions";
 import { cardMenu, creationMenu, filterMenu, sortMenu, mobileCardMenu } from "./Menus";
 import { TouchInteraction } from "./TouchInteraction";
 import { MoveModal } from "./MoveModal";
@@ -280,6 +283,7 @@ export class GalleryView extends ItemView {
     this.folderPath = folder.path;
     const settings = this.getSettings();
     const language = settings.language;
+    this.contentEl.style.setProperty("--vg-heading-font-size", `${settings.headingFontSize}px`);
     this.contentEl.style.setProperty("--vg-title-font-size", `${settings.titleFontSize}px`);
     for (const key of COVER_COLOR_KEYS) {
       this.contentEl.style.setProperty(`--vg-${key}`, settings[key]);
@@ -351,7 +355,6 @@ export class GalleryView extends ItemView {
     new CreateItemModal(this.app, folder, kind, this.getSettings().language, item => {
       if (this.folderPath === folder.path) { this.render(); this.selectCard(item.path); }
       else this.scheduleRefresh();
-      if (item instanceof TFile) void this.app.workspace.getLeaf("tab").openFile(item);
     }).open();
   }
 
@@ -606,7 +609,7 @@ export class GalleryView extends ItemView {
   private openEntry(entry: GalleryEntry): void {
     if (this.app.vault.getAbstractFileByPath(entry.item.path) !== entry.item) return;
     if (entry.item instanceof TFolder) void this.navigateTo(entry.item);
-    else void this.app.workspace.getLeaf(false).openFile(entry.item);
+    else void openGalleryFile(this.app, entry.item);
   }
 
   private selectCard(path: string | null): void {
@@ -642,18 +645,50 @@ export class GalleryView extends ItemView {
     if (Platform.isMobile) { this.touchSelecting = true; this.updateSelection(); }
     const language = this.getSettings().language;
     const rename = this.selection.paths.size === 1 ? () => new RenameModal(this.app, item, language).open() : null;
-    const remove = () => void deleteGalleryItem(this.app, item).then(deleted => {
-      if (deleted) { this.selection.paths.delete(item.path); this.scheduleRefresh(); }
-    }).catch(error => { console.error("[Visual Gallery] Delete failed", error); new Notice(translate(language, "deleteFailed")); });
+    const items = this.selectedItems();
+    const remove = () => {
+      if (items.length > 0) {
+        new DeleteSelectionModal(this.app, language, items, async () => {
+          const remaining = items.filter(value => this.app.vault.getAbstractFileByPath(value.path) === value);
+          if (!remaining.length) return;
+          const paths = new Map(remaining.map(value => [value, value.path]));
+          const result = await trashGallerySelection(this.app, remaining);
+          for (const deleted of result.deleted) this.selection.paths.delete(paths.get(deleted)!);
+          this.updateSelection(); this.scheduleRefresh();
+          if (result.error) throw Error(translate(language, "deletePartial", { deleted: items.length - remaining.length + result.deleted.length, total: items.length }));
+        }).open();
+      }
+    };
+    const group = () => this.groupSelection(items);
     const menu = Platform.isMobile ? mobileCardMenu(language, this.selection.paths.size, {
-      open: () => { this.selectCard(null); if (item instanceof TFolder) void this.navigateTo(item); else if (item instanceof TFile) void this.app.workspace.getLeaf(false).openFile(item); },
+      open: () => { this.selectCard(null); if (item instanceof TFolder) void this.navigateTo(item); else if (item instanceof TFile) void openGalleryFile(this.app, item); },
       selectAll: () => { this.touchSelecting = true; this.order.forEach(path => this.selection.paths.add(path)); this.updateSelection(); },
-      clear: () => this.selectCard(null), move: () => this.chooseMoveFolder(), rename, remove,
+      clear: () => this.selectCard(null), move: () => this.chooseMoveFolder(), rename, remove, group,
     }) : cardMenu(language, Platform.isMacOS, canRevealItem(this.app), rename, remove, () => {
       try { revealGalleryItem(this.app, item); }
       catch (error) { console.error("[Visual Gallery] Reveal failed", error); new Notice(translate(language, "revealFailed")); }
-    });
+    }, { count: items.length, create: group });
     menu.showAtPosition(position, this.contentEl.ownerDocument);
+  }
+
+  private groupSelection(items: TAbstractFile[]): void {
+    if (items.length < 2 || this.moving) return;
+    const folder = this.resolveFolder(), language = this.getSettings().language;
+    new CreateItemModal(this.app, folder, "folder", language, created => {
+      this.selection.clear();
+      this.render(); this.revealItem(created.path);
+    }, {
+      title: translate(language, "groupSelection", { count: items.length }),
+      create: async name => {
+        if (this.moving) throw Error("Move already running");
+        this.moving = true;
+        try { return await groupGallerySelection(this.app, folder, items, name); }
+        finally { this.moving = false; this.scheduleRefresh(); }
+      },
+      failure: error => error instanceof GroupSelectionError
+        ? translate(language, "groupPartial", { count: error.remaining, path: error.folderPath })
+        : translate(language, "createFailed"),
+    }).open();
   }
 
   private chooseMoveFolder(): void {
@@ -762,7 +797,8 @@ export class GalleryView extends ItemView {
     const fluid = grid.parentElement?.classList.contains("is-fluid") ?? false;
     // clientWidth rounds fractional occupied widths and can lose a whole column.
     const gridWidth = parseFloat(getComputedStyle(grid).width) || grid.clientWidth;
-    const width = fluid ? gridWidth : Math.min(gridWidth, this.getSettings().cardWidth);
+    const preferredWidth = parseFloat(getComputedStyle(grid).getPropertyValue("--vg-effective-card-width")) || this.getSettings().cardWidth;
+    const width = fluid ? gridWidth : Math.min(gridWidth, preferredWidth);
     const ratios = cards.map(card => {
       card.style.setProperty("--vg-document-scale", String(Math.max(.1, (width - 32) / 560)));
       if (card.dataset.kind === "folder") return .65;
@@ -773,7 +809,7 @@ export class GalleryView extends ItemView {
     });
     if (this.mode === "masonry") {
       const gap = parseFloat(getComputedStyle(grid).columnGap) || 22;
-      const result = masonryBoxes(gridWidth, this.getSettings().cardWidth, gap, ratios, fluid);
+      const result = masonryBoxes(gridWidth, preferredWidth, gap, ratios, fluid);
       grid.style.height = result.height + "px";
       cards.forEach((card, index) => {
         const box = result.boxes[index]!;

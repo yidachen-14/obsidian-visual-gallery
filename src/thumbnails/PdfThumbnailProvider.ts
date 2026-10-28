@@ -7,7 +7,7 @@ import { AsyncQueue } from "../utils/AsyncQueue";
 import type { ThumbnailResult } from "./types";
 import { thumbnailBlob } from "../utils/thumbnailBlob";
 
-const PDF_RENDERER_VERSION = "pdfjs-v3";
+const PDF_RENDERER_VERSION = "pdfjs-v4-local-only";
 
 export class PdfThumbnailProvider {
   private readonly inflight = new Map<string, Promise<ThumbnailResult>>();
@@ -91,7 +91,7 @@ export class PdfThumbnailProvider {
       const baseViewport = page.getViewport({ scale: 1 });
       const scale = Math.min(2, (Platform.isMobile ? 900 : 1200) / Math.max(baseViewport.width, baseViewport.height));
       const viewport = page.getViewport({ scale });
-      const canvas = window.document.createElement("canvas");
+      const canvas = window.createFragment().createEl("canvas");
       canvas.width = Math.max(1, Math.round(viewport.width));
       canvas.height = Math.max(1, Math.round(viewport.height));
       const context = canvas.getContext("2d", { alpha: false });

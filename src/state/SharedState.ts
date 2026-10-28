@@ -62,7 +62,7 @@ export function seedSharedSettings(saved: Partial<VisualGallerySettings>, device
 }
 export function sharedSettings(state: SharedState): Omit<VisualGallerySettings, "cardWidth"> {
   const settings = { ...DEFAULT_SETTINGS };
-  for (const key of SHARED_KEYS) if (state.settings[key]) Object.assign(settings, { [key]: state.settings[key]!.value });
+  for (const key of SHARED_KEYS) if (state.settings[key]) Object.assign(settings, { [key]: state.settings[key].value });
   const { cardWidth: _local, ...shared } = loadGallerySettings(settings);
   return shared;
 }

@@ -115,3 +115,27 @@ enabled so opening a note in the same pane can return to the gallery.
 Gate with tests/gallery-history.test.ts and gallery-events tests. Native
 checks in scripts/check-history-018-native.js are disposable-vault-only;
 synthetic events are not proof of physical mouse hardware handling.
+
+## Approved library workflow refinements — 2026-10-28
+
+The user requests local development only, with no publication in this iteration.
+The gallery's three modes share a preferred content width capped at 1120 px;
+card widths retain the user's preference and compress when a pane narrows.
+Preserve occupied-column header alignment, the single-row toolbar and the
+unchanged clipped-surface/outside-stroke contract in all modes.
+
+The top library-home button has a configurable label, defaulting to the vault
+name. Default folder artwork is a closed folder; navigation defaults to Home.
+Use a searchable native icon library rather than a fixed inline choice row.
+Retain saved custom icons and appearance during language/settings changes.
+
+New notes/Canvases remain in the gallery. Opening a file from cards or this
+plugin's sidebar reuses an existing file leaf, or creates one new tab while
+retaining the gallery. Concurrent requests for the same file must coalesce.
+
+Multi-selection menus omit Rename and Finder/system reveal. Delete affects the
+whole captured selection and requires an explicit confirmation even when the
+host disables deletion prompts. Add a count-labelled action to create a folder
+containing the selection. Use original files and public FileManager operations,
+preflight names/collisions/stale identities, preserve unselected items and report
+partial failures. Grouping attempts safe rollback after an interrupted move.

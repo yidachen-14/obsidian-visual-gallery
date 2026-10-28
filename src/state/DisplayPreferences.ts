@@ -6,7 +6,7 @@ function parse(value: unknown): DisplayData {
   const folders: DisplayData["folders"] = [], recent: DisplayData["recent"] = [];
   if (Array.isArray(data.folders)) for (const entry of data.folders.slice(-500)) {
     if (!Array.isArray(entry) || typeof entry[0] !== "string" || !entry[1] || typeof entry[1] !== "object") continue;
-    const folder = entry[1] as FolderDisplay, scroll: FolderDisplay["scroll"] = {};
+    const folder = entry[1], scroll: FolderDisplay["scroll"] = {};
     for (const mode of ["masonry", "grid", "list"] as const) {
       const n = folder.scroll?.[mode]; if (typeof n === "number" && Number.isFinite(n)) scroll[mode] = Math.max(0, n);
     }
