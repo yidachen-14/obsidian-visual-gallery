@@ -1,3 +1,11 @@
+## 0.1.30 — 2026-10-30
+
+- Address the 12 source-warning locations: explicit void settings renderers, guarded async icon selection and trash-preference-aware rollback cleanup.
+- Show translated settings-save and cache-clear failure messages; preserve automatic retry and restore controls after failure.
+- Gate Promise callbacks and file deletion APIs during production builds.
+
+Native Obsidian failure/retry and rollback checks pass. See [release notes and verification boundaries](docs/releases/0.1.30.md).
+
 ## 0.1.29 — 2026-10-28
 
 - Remove yellow tab flashing when activating an existing file.

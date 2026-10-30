@@ -38,12 +38,13 @@ export class IconLibraryModal extends Modal {
         button.dataset.icon = id;
         button.tabIndex = rendered === 0 || id === this.selected ? 0 : -1;
         renderGalleryIcon(button, id);
-        button.addEventListener("click", async () => {
+        const select = async () => {
           if (busy) return;
           busy = true; button.disabled = true;
           try { await this.choose(id); this.close(); }
-          catch { error.setText(t("createFailed")); busy = false; button.disabled = false; }
-        });
+          catch { error.setText(t("settingsSaveFailed")); busy = false; button.disabled = false; }
+        };
+        button.addEventListener("click", () => { void select(); });
       }
       more.hidden = rendered === results.length;
     };

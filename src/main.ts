@@ -121,7 +121,7 @@ export default class VisualGalleryPlugin extends Plugin {
       () => this.gallerySettings,
       (settings) => this.updateSettings(settings),
       `${pluginDirectory}/thumbnail-cache`,
-      () => this.clearThumbnailCache(),
+      () => this.clearThumbnailCache(true),
     ));
     this.ribbon = this.addRibbonIcon(this.gallerySettings.navigationIcon, this.t("commandOpen"), () => void this.openGallery());
     this.addLocalizedCommand("commandOpen", {
@@ -282,9 +282,8 @@ export default class VisualGalleryPlugin extends Plugin {
     this.gallerySettings = { ...settings, cardWidth: validCardWidth(settings.cardWidth) };
     this.app.saveLocalStorage("visual-gallery-card-width", this.gallerySettings.cardWidth);
     // Queue the patch immediately, preserving the order of rapid UI edits.
-    const saving = Object.keys(patch).length ? this.sync?.update(patch).catch(error => this.syncError(error)) : undefined;
-    await this.refreshSettingsUI();
-    await saving;
+    const saving = Object.keys(patch).length ? this.sync?.update(patch).catch(error => { this.syncError(error); throw error; }) : undefined;
+    await Promise.all([this.refreshSettingsUI(), saving]);
   }
 
   async onExternalSettingsChange(): Promise<void> {
@@ -346,7 +345,7 @@ export default class VisualGalleryPlugin extends Plugin {
     });
   }
 
-  private async clearThumbnailCache(): Promise<void> {
+  private async clearThumbnailCache(propagateFailure = false): Promise<void> {
     const thumbnails = this.thumbnails;
     if (!thumbnails) return;
     try {
@@ -355,6 +354,7 @@ export default class VisualGalleryPlugin extends Plugin {
       this.refreshGalleryViews();
       new Notice(this.t("cacheCleared"));
     } catch (error) {
+      if (propagateFailure) throw error;
       console.error("[Visual Gallery] Cache clear failed", error);
       new Notice(this.t("cacheFailed"));
     }

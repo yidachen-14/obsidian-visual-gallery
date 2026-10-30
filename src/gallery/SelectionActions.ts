@@ -56,7 +56,7 @@ export async function groupGallerySelection(app: App, parent: TFolder, items: re
     }
     const remaining = roots.filter(item => item.parent === folder).length;
     if (!folder.children.length && app.vault.getAbstractFileByPath(path) === folder) {
-      try { await app.vault.delete(folder); } catch { /* Only this newly-created empty folder is eligible for cleanup. */ }
+      try { await app.fileManager.trashFile(folder); } catch { /* Only this newly-created empty folder is eligible for cleanup. */ }
     }
     throw new GroupSelectionError(remaining, path, { cause });
   }

@@ -36,8 +36,9 @@ function library() {
   const createFolder = vi.fn(async (path: string) => { if(files.has(path))throw Error("exists"); const folder = new TFolder(path,parent); parent.children.push(folder);files.set(path,folder);return folder; });
   const remove = vi.fn(async (item: TFile | TFolder) => { files.delete(item.path); if(item.parent)item.parent.children=item.parent.children.filter(v=>v!==item); });
   const rename = vi.fn(async (item: TFile | TFolder,path: string) => { if(files.has(path))throw Error("collision");files.delete(item.path);if(item.parent)item.parent.children=item.parent.children.filter(v=>v!==item);item.path=path;item.name=path.split("/").at(-1)!;item.parent=files.get(path.slice(0,path.lastIndexOf("/"))) as TFolder;item.parent.children.push(item);files.set(path,item); });
-  const app = { vault: { getRoot:()=>root,getAbstractFileByPath:(path:string)=>files.get(path),createFolder,delete:remove },fileManager:{ renameFile:rename,trashFile:remove } } as unknown as App;
-  return { root,parent,a,b,files,createFolder,rename,remove,app };
+  const trash = vi.fn(remove), permanentDelete = vi.fn();
+  const app = { vault: { getRoot:()=>root,getAbstractFileByPath:(path:string)=>files.get(path),createFolder,delete:permanentDelete },fileManager:{ renameFile:rename,trashFile:trash } } as unknown as App;
+  return { root,parent,a,b,files,createFolder,rename,remove,trash,permanentDelete,app };
 }
 describe("grouping selected originals", () => {
   it("moves every selected item into one new sibling folder and keeps unselected files", async () => {
@@ -61,6 +62,20 @@ describe("grouping selected originals", () => {
     const f=library(), move=f.rename.getMockImplementation()!;f.rename.mockImplementation(async(item,path)=>{if(item===f.b)throw Error("disk");await move(item,path);});
     await expect(groupGallerySelection(f.app,f.parent,[f.a,f.b],"Bundle")).rejects.toMatchObject({remaining:0,folderPath:"Library/Bundle"});
     expect(f.files.get("Library/A.md")).toBe(f.a);expect(f.files.get("Library/B.canvas")).toBe(f.b);expect(f.files.has("Library/Bundle")).toBe(false);
+    expect(f.trash).toHaveBeenCalledOnce();expect(f.trash.mock.calls[0]![0].path).toBe("Library/Bundle");expect(f.permanentDelete).not.toHaveBeenCalled();
+  });
+  it("keeps the new folder if unrelated content arrives during rollback",async()=>{
+    const f=library(), move=f.rename.getMockImplementation()!;
+    f.rename.mockImplementation(async(item,path)=>{
+      if(item===f.b)throw Error("disk");
+      await move(item,path);
+      if(path==="Library/A.md"){
+        const folder=f.files.get("Library/Bundle") as TFolder, other=new TFile("Library/Bundle/Keep.md",0,folder);
+        folder.children.push(other);f.files.set(other.path,other);
+      }
+    });
+    await expect(groupGallerySelection(f.app,f.parent,[f.a,f.b],"Bundle")).rejects.toBeInstanceOf(GroupSelectionError);
+    expect(f.files.has("Library/Bundle/Keep.md")).toBe(true);expect(f.trash).not.toHaveBeenCalled();expect(f.permanentDelete).not.toHaveBeenCalled();
   });
   it("retains and reports files if rollback is blocked",async()=>{
     const f=library(), move=f.rename.getMockImplementation()!;f.rename.mockImplementation(async(item,path)=>{if(item===f.b||path==="Library/A.md")throw Error("disk");await move(item,path);});

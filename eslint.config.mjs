@@ -7,6 +7,8 @@ export default tseslint.config({
   languageOptions: { parser: tseslint.parser, parserOptions: { project: "./tsconfig.json", tsconfigRootDir: import.meta.dirname } },
   plugins: { "@typescript-eslint": tseslint.plugin, obsidianmd: obsidian },
   rules: {
+    "@typescript-eslint/no-misused-promises": "error",
+    "obsidianmd/prefer-file-manager-trash-file": "error",
     "@typescript-eslint/unbound-method": "error",
     "@typescript-eslint/no-require-imports": "error",
     "@typescript-eslint/no-unsafe-assignment": "error",

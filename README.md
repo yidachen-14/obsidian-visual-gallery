@@ -81,6 +81,8 @@ Drag-and-drop and rename act on **original files**, not previews. Moves through 
 
 **Every deletion requires confirmation**, even if native deletion prompts are disabled. All deletion respects Obsidian's trash-location preference. Multi-selection menus omit Rename and Finder/system reveal, and can create a folder containing all selected items.
 
+Settings-save failures display a translated notice; local edits are retained for the existing automatic sync retry. Cache-clear failures display a notice and restore the button so you can retry.
+
 Settings include a read-only cache location and **Clear thumbnail cache**. Clearing the cache removes disposable previews only; the next gallery visit regenerates them. Commands can also rebuild all Canvas previews or generate a preview for the active Canvas.
 
 Settings are grouped into Interface, Card layout, Browsing defaults, Icons,

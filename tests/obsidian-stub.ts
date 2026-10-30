@@ -84,3 +84,8 @@ export class PluginSettingTab {
 
 export function getIconIds(): string[] { return ["folder", "folders", "archive", "box", "library", "book-open", "folder-heart", "folder-cog", "folder-tree", "layout-grid", "gallery-horizontal", "images", "film", "clapperboard", "palette", "home", "house", "lucide-folder", "camera", "alarm-clock"]; }
 export class Modal { constructor(_app: unknown) {} open(): void {} close(): void {} }
+
+export class Notice {
+  static messages: string[] = [];
+  constructor(message: string) { Notice.messages.push(message); }
+}

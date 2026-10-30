@@ -25,6 +25,16 @@ async function exchange(a: ReturnType<typeof disk>, b: ReturnType<typeof disk>) 
 }
 
 describe("shared settings and pinned folders", () => {
+  it("retains a failed local edit and persists it on the next refresh", async () => {
+    const store=disk(), a=device("A",store);await a.sync.load({});
+    const write=store.adapter.write as ReturnType<typeof vi.fn>;
+    write.mockRejectedValueOnce(Error("disk busy"));
+    await expect(a.sync.update({galleryTitle:"Retained edit"})).rejects.toThrow("disk busy");
+    expect(a.sync.settings().galleryTitle).toBe("Retained edit");
+    await a.sync.refresh();
+    const b=device("B",store);await b.sync.load({});
+    expect(b.sync.settings().galleryTitle).toBe("Retained edit");
+  });
   it("preserves legacy custom appearance while keeping card width local", async () => {
     const d = disk(), a = device("A", d);
     await a.sync.load({ language: "zh-TW", cardWidth: 320, lightStart: "#123456", darkStart: "#4a4a4a", appearanceDefaultsVersion: 1 });
